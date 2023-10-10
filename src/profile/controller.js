@@ -1,4 +1,4 @@
-const pool = require("./database");
+const pool = require("../../database");
 const queries = require("./queries");
 
 const login = async (req, res) => {
@@ -26,7 +26,7 @@ const login = async (req, res) => {
 };
 
 const register = async (req, res) => {
-  const { name, surname, email, password, nickname } = req.body;
+  const { name, email, password, nickname } = req.body;
 
   try {
     const emailExistsResult = await pool.query(queries.checkEmailExists, [
@@ -76,7 +76,27 @@ const register = async (req, res) => {
   }
 };
 
+const healthCheck = async (req, res) => {
+  try {
+    await pool.query("SELECT NOW()");
+    res.json({ success: true, message: "Servidor rodando." });
+  } catch (error) {
+    console.error("Erro ao consultar o banco de dados:", error);
+    return res.status(500).json({ success: false, message: error });
+  }
+};
+
+const ok = (req, res) => {
+  try {
+    return res.json({ success: true, message: "Ok!" });
+  } catch (error) {
+    return res.json({ success: false, message: error });
+  }
+};
+
 module.exports = {
   login,
   register,
+  healthCheck,
+  ok,
 };
