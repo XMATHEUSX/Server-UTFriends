@@ -1,5 +1,5 @@
 const selectUser =
-  'SELECT * FROM "conta" WHERE nm_usuario = $1 AND senha=crypt($2,senha)';
+  'SELECT b.nickname FROM "conta" as a INNER JOIN perfil as b on a.user_id = b.user_id WHERE a.email = $1 AND a.senha=crypt($2,a.senha)';
 
 const checkEmailExists =
   'SELECT EXISTS (SELECT 1 FROM "conta" WHERE email = $1)';

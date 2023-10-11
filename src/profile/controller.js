@@ -2,16 +2,15 @@ const pool = require("../../database");
 const queries = require("./queries");
 
 const login = async (req, res) => {
-  const { username, password } = req.body;
-
-  console.log("Usuário:", username);
-  console.log("Senha:", password);
-
+  const { username: email, password } = req.body;
   try {
-    const result = await pool.query(queries.selectUser, [username, password]);
+    const result = await pool.query(queries.selectUser, [email, password]);
 
     if (result.rows.length > 0) {
-      res.json({ success: true, message: "Login bem-sucedido." });
+      res.json({
+        success: true,
+        message: "Login bem-sucedido.\nBem vindo " + result.rows[0].nickname,
+      });
     } else {
       res
         .status(401)
