@@ -1,14 +1,18 @@
-const pool = require("../../database");
+const { config } = require("dotenv");
+const configs = require("../../config");
 const queries = require("./queries");
+const jwt = require('jsonwebtoken');
 
 const login = async (req, res) => {
-  const { username: email, password } = req.body;
+  const { email: email, password } = req.body;
   try {
-    const result = await pool.query(queries.selectUser, [email, password]);
+    const result = await configs.pool.query(queries.selectUser, [email, password]);
 
     if (result.rows.length > 0) {
+      var token = jwt.sign(email, configs.segredo);
       res.json({
         success: true,
+        token: token,
         message: "Login bem-sucedido.\nBem vindo " + result.rows[0].nickname,
       });
     } else {
@@ -28,7 +32,7 @@ const register = async (req, res) => {
   const { name, email, password, nickname } = req.body;
 
   try {
-    const emailExistsResult = await pool.query(queries.checkEmailExists, [
+    const emailExistsResult = await configs.pool.query(queries.checkEmailExists, [
       email,
     ]);
 
@@ -38,7 +42,7 @@ const register = async (req, res) => {
         .json({ success: false, message: "O email já está em uso." });
     }
 
-    const nicknameExistsResult = await pool.query(queries.checkNicknameExists, [
+    const nicknameExistsResult = await configs.pool.query(queries.checkNicknameExists, [
       nickname,
     ]);
 
@@ -48,9 +52,9 @@ const register = async (req, res) => {
         .json({ success: false, message: "O nickname já está em uso." });
     }
 
-    await pool.query("BEGIN");
+    await configs.pool.query("BEGIN");
 
-    const insertUserResult = await pool.query(queries.insertUser, [
+    const insertUserResult = await configs.pool.query(queries.insertUser, [
       email,
       name,
       password,
@@ -60,14 +64,14 @@ const register = async (req, res) => {
 
     const userId = insertUserResult.rows[0].user_id;
 
-    await pool.query(queries.insertProfile, [userId, nickname]);
-    await pool.query("COMMIT");
+    await configs.pool.query(queries.insertProfile, [userId, nickname]);
+    await configs.pool.query("COMMIT");
 
     res.json({ success: true, message: "Registro bem-sucedido." });
   } catch (error) {
     console.error("Erro ao registrar no banco de dados:", error);
 
-    await pool.query("ROLLBACK");
+    await configs.pool.query("ROLLBACK");
 
     res
       .status(500)
@@ -75,9 +79,29 @@ const register = async (req, res) => {
   }
 };
 
+const userInfo = async (req, res) => {
+  const {token} = req.body;
+  if (token) {
+    try {
+      // Verificar e decodificar o token
+      var dadosRecebidos = jwt.verify(token, configs.segredo);
+      const result = await configs.pool.query(queries.selectUserId, [dadosRecebidos]);
+      const result_new = await configs.pool.query(queries.selectProfile, [result.rows[0].user_id]);
+      res.json({ 
+        success: true,
+        dados:result_new.rows[0]
+      });
+    } catch (error) {
+      console.error('Erro na verificação do token:', error);
+    }
+  } else {
+    console.error('Token não encontrado.');
+  }
+}
+
 const healthCheck = async (req, res) => {
   try {
-    await pool.query("SELECT NOW()");
+    await configs.pool.query("SELECT NOW()");
     res.json({ success: true, message: "Servidor rodando." });
   } catch (error) {
     console.error("Erro ao consultar o banco de dados:", error);
@@ -96,6 +120,7 @@ const ok = (req, res) => {
 module.exports = {
   login,
   register,
+  userInfo,
   healthCheck,
   ok,
 };

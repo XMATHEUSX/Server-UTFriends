@@ -13,4 +13,6 @@ const pool = new Pool({
   },
 });
 
-module.exports = pool;
+const segredo = process.env.JWT_KEY
+
+module.exports = {pool,segredo};

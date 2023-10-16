@@ -12,10 +12,16 @@ const insertUser =
 
 const insertProfile = "INSERT INTO perfil(user_id, nickname) VALUES ($1, $2)";
 
+const selectUserId = 'SELECT user_id FROM "conta" WHERE email = $1'
+
+const selectProfile = 'SELECT * FROM "perfil" WHERE user_id = $1'
+
 module.exports = {
   selectUser,
   checkEmailExists,
   checkNicknameExists,
   insertUser,
   insertProfile,
+  selectUserId,
+  selectProfile
 };
