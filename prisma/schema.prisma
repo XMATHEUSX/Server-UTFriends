@@ -1,0 +1,43 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+  extensions      = ["pgcrypto"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model conta {
+  user_id                      Int      @id @default(autoincrement())
+  email                        String   @unique @db.VarChar(60)
+  nm_usuario                   String   @db.VarChar(100)
+  senha                        String
+  telefone                     String?  @db.VarChar(15)
+  dt_nascimento                DateTime @db.Date
+  curso_id                     Int?
+  email_verificado             Boolean? @default(false)
+  curso                        curso?   @relation(fields: [curso_id], references: [curso_id], onDelete: NoAction, onUpdate: NoAction)
+  perfil_conta_user_idToperfil perfil   @relation("conta_user_idToperfil", fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction)
+  perfil_perfil_user_idToconta perfil?  @relation("perfil_user_idToconta")
+}
+
+model curso {
+  curso_id Int     @id @default(autoincrement())
+  nm_curso String? @db.VarChar(100)
+  conta    conta[]
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model perfil {
+  user_id                     Int     @id @default(autoincrement())
+  nickname                    String  @db.VarChar(30)
+  biografia                   String? @db.VarChar(256)
+  seguidores                  Json?   @db.Json
+  seguindo                    Json?   @db.Json
+  conta_conta_user_idToperfil conta?  @relation("conta_user_idToperfil")
+  conta_perfil_user_idToconta conta   @relation("perfil_user_idToconta", fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction)
+}

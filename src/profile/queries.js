@@ -1,34 +1,128 @@
-const selectUser =
-  'SELECT b.nickname FROM "conta" as a INNER JOIN perfil as b on a.user_id = b.user_id WHERE a.email = $1 AND a.senha=crypt($2,a.senha)';
+const { PrismaClient } = require("@prisma/client");
 
-const checkEmailExists =
-  'SELECT EXISTS (SELECT 1 FROM "conta" WHERE email = $1)';
+const prisma = new PrismaClient();
 
-const checkNicknameExists =
-  'SELECT EXISTS(SELECT 1 FROM "conta" WHERE nm_usuario = $1)';
+async function selectUser(email, password) {
+  const userEncryptedPass =
+    await prisma.$queryRaw`SELECT senha from conta where email = ${email}`;
+  const decryptedPass =
+    await prisma.$queryRaw`SELECT crypt(${password}, ${userEncryptedPass[0].senha})`;
 
-const createUserId = 'SELECT user_id FROM conta order by user_id desc limit 1'
+  return prisma.conta.findFirst({
+    where: {
+      email: email,
+      senha: decryptedPass[0].crypt,
+    },
+    select: {
+      email_verificado: true,
+      senha: true,
+      perfil_conta_user_idToperfil: {
+        select: {
+          nickname: true,
+        },
+      },
+    },
+  });
+}
 
-const insertUser =
-  "INSERT INTO conta(user_id,email, nm_usuario, senha, telefone,dt_nascimento, curso_id) VALUES ($1,$2, $3, crypt($4, gen_salt('bf', 6)), $5, $6, $7)";
+async function checkEmailExists(email) {
+  return prisma.conta.findFirst({
+    where: {
+      email: email,
+    },
+  });
+}
 
-const insertProfile = "INSERT INTO perfil(user_id, nickname) VALUES ($1, $2)";
+async function checkNicknameExists(nickname) {
+  return prisma.perfil.findFirst({
+    where: {
+      nickname: nickname,
+    },
+  });
+}
 
-const selectUserId = 'SELECT user_id FROM "conta" WHERE email = $1'
+async function findLastUserId() {
+  return prisma.conta.findFirst({
+    orderBy: {
+      user_id: "desc",
+    },
+    select: {
+      user_id: true,
+    },
+  });
+}
 
-const selectProfile = 'SELECT * FROM "perfil" WHERE user_id = $1'
+async function insertUserProfile(
+  user_id,
+  email,
+  nm_usuario,
+  senha,
+  telefone,
+  dt_nascimento,
+  curso_id,
+  nickname
+) {
+  const crypt_senha =
+    await prisma.$queryRaw`SELECT crypt(${password}, gen_salt('bf'))`;
 
-const updateEmailVerify = "UPDATE conta SET email_verificado = true WHERE email = $1"
+  await prisma.$transaction([
+    prisma.conta.create({
+      data: {
+        user_id: user_id,
+        email: email,
+        nm_usuario: nm_usuario,
+        senha: crypt_senha[0].crypt,
+        telefone: telefone,
+        dt_nascimento: dt_nascimento,
+        curso_id: curso_id,
+      },
+    }),
+    prisma.perfil.create({
+      data: {
+        user_id: user_id,
+        nickname: nickname,
+      },
+    }),
+  ]);
+}
 
+async function selectUserId(email) {
+  return prisma.conta.findFirst({
+    where: {
+      email: email,
+    },
+    select: {
+      user_id: true,
+    },
+  });
+}
+
+async function selectProfile(user_id) {
+  return prisma.perfil.findFirst({
+    where: {
+      user_id: user_id,
+    },
+  });
+}
+
+async function updateEmailVerify(email) {
+  return prisma.conta.update({
+    where: {
+      email: email,
+    },
+    data: {
+      email_verificado: true,
+    },
+  });
+}
 
 module.exports = {
   selectUser,
   checkEmailExists,
   checkNicknameExists,
-  createUserId,
-  insertUser,
-  insertProfile,
+  findLastUserId,
+  insertUserProfile,
   selectUserId,
   selectProfile,
-  updateEmailVerify
+  updateEmailVerify,
 };

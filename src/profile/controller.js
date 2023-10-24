@@ -1,28 +1,32 @@
-const { config } = require("dotenv");
-const configs = require("../../config");
+require("dotenv").config();
 const queries = require("./queries");
-const jwt = require('jsonwebtoken');
-const Resend = require('resend');
-const url = require('url');
-const querystring = require('querystring');
-
+const jwt = require("jsonwebtoken");
+const Resend = require("resend");
+const url = require("url");
+const configs = require("../../config");
+const querystring = require("querystring");
 
 const login = async (req, res) => {
-  const { email: email, password } = req.body;
+  const { email, password } = req.body;
   try {
-    const result = await configs.pool.query(queries.selectUser, [email, password]);
-
-    if (result.rows.length > 0) {
+    const result = await queries.selectUser(email, password);
+    if (result === null) {
+      res
+        .status(401)
+        .json({ success: false, message: "Credenciais inválidas." });
+    } else if (result.email_verificado) {
       var token = jwt.sign(email, configs.segredo);
       res.json({
         success: true,
         token: token,
-        message: "Login bem-sucedido.\nBem vindo " + result.rows[0].nickname,
+        message:
+          "Login bem-sucedido.\nBem vindo " +
+          result.perfil_conta_user_idToperfil.nickname,
       });
     } else {
       res
         .status(401)
-        .json({ success: false, message: "Credenciais inválidas." });
+        .json({ success: false, message: "Email não verificado." });
     }
   } catch (error) {
     console.error("Erro ao consultar o banco de dados:", error);
@@ -33,74 +37,67 @@ const login = async (req, res) => {
 };
 
 const register = async (req, res) => {
-  const { name, email, password, nickname,telphone,birth,curso } = req.body;
-  const resend = new Resend.Resend('re_SnxCwaJY_9xB6YrMp2xf4mDQYMXts39uh');
-  const userIdNext = await configs.pool.query(queries.createUserId); 
-  const keyId = (userIdNext.rows[0].user_id)+1;
-  console.log(name+"\n"+email+"\n"+password+"\n"+nickname+"\n"+telphone+"\n"+birth+"\n"+curso)
-  try {
-    const emailExistsResult = await configs.pool.query(queries.checkEmailExists, [
-      email,
-    ]);
+  const { name, email, password, nickname, telphone, birth, curso } = req.body;
+  const resend = new Resend.Resend(process.env.RESEND_KEY);
+  const lastUserId = await queries.findLastUserId();
+  const user_id = lastUserId.user_id + 1;
 
-    if (emailExistsResult.rows[0].exists) {
+  try {
+    const emailExistsResult = await queries.checkEmailExists(email);
+
+    if (emailExistsResult !== null) {
       return res
         .status(400)
         .json({ success: false, message: "O email já está em uso." });
     }
 
-    const nicknameExistsResult = await configs.pool.query(queries.checkNicknameExists, [
-      nickname,
-    ]);
-
-    if (nicknameExistsResult.rows[0].exists) {
+    const nicknameExistsResult = await queries.checkNicknameExists(nickname);
+    if (nicknameExistsResult !== null) {
       return res
         .status(400)
         .json({ success: false, message: "O nickname já está em uso." });
     }
 
-    await configs.pool.query("BEGIN");
-    const insertUserResult = await configs.pool.query(queries.insertUser, [
-      keyId,
+    await queries.insertUserProfile(
+      user_id,
       email,
       name,
       password,
       telphone,
-      birth,
-      curso
-    ]);
-    await configs.pool.query(queries.insertProfile, [keyId, nickname]);
-    await configs.pool.query("COMMIT");
-    
+      birth + "T00:00:00.000Z",
+      parseInt(curso),
+      nickname
+    );
+
     data = {
-      "time": Date.now,
-      "email": email,
-      "password": password
-    }
+      time: Date.now,
+      email: email,
+      password: password,
+    };
 
-  // Obter o tempo atual em milissegundos
-var now = Date.now();
+    // Obter o tempo atual em milissegundos
+    var now = Date.now();
 
-// Calcular a hora de expiração adicionando uma hora (3600 segundos) ao tempo atual
-var expirationTime = now + 3600000; // 3600 segundos * 1000 milissegundos/segundo
+    // Calcular a hora de expiração adicionando uma hora (3600 segundos) ao tempo atual
+    var expirationTime = now + 3600000; // 3600 segundos * 1000 milissegundos/segundo
 
-console.log(expirationTime);
+    console.log(expirationTime);
 
-    
     //Construa o token JWT
-    token = jwt.sign(data, configs.segredo)
-    console.log(token)
+    token = jwt.sign(data, configs.segredo);
+    console.log(token);
     resend.emails.send({
-      from: 'onboarding@resend.dev',
-      to: 'matheusxavier@alunos.utfpr.edu.br',
-      subject: 'Congratulations',
-      html: '<p>email de verificação<strong>http://localhost:3000/api/v1/profile/verify?code='+token+'</strong></p>'
+      from: "onboarding@resend.dev",
+      to: "matheusxavier@alunos.utfpr.edu.br",
+      subject: "Congratulations",
+      html:
+        "<p>email de verificação<strong>http://localhost:3000/api/v1/profile/verify?code=" +
+        token +
+        "</strong></p>",
     });
     res.json({ success: true, message: "Registro bem-sucedido." });
   } catch (error) {
     console.error("Erro ao registrar no banco de dados:", error);
-
-    await configs.pool.query("ROLLBACK");
 
     res
       .status(500)
@@ -109,37 +106,35 @@ console.log(expirationTime);
 };
 
 const userInfo = async (req, res) => {
-  const {token} = req.body;
+  const { token } = req.body;
   if (token) {
     try {
       // Verificar e decodificar o token
-      var dadosRecebidos = jwt.verify(token, configs.segredo);
-      const result = await configs.pool.query(queries.selectUserId, [dadosRecebidos]);
-      const result_new = await configs.pool.query(queries.selectProfile, [result.rows[0].user_id]);
-      res.json({ 
+      var emailRecebido = jwt.verify(token, configs.segredo);
+      const userId = await queries.selectUserId(emailRecebido).userId;
+      const dadosProfile = await queries.selectProfile(userId);
+      res.json({
         success: true,
-        dados:result_new.rows[0]
+        dados: dadosProfile,
       });
     } catch (error) {
-      console.error('Erro na verificação do token:', error);
+      console.error("Erro na verificação do token:", error);
     }
   } else {
-    console.error('Token não encontrado.');
+    console.error("Token não encontrado.");
   }
-}
-
+};
 
 const verify = async (req, res) => {
- 
   const parsedUrl = url.parse(req.url);
-  
+
   // Parse dos parâmetros da string de consulta
   const params = querystring.parse(parsedUrl.query);
-  
+
   //Todo Verificar a expirição
   const tokenVerify = params.code;
   var dadosRecebidos = jwt.verify(tokenVerify, configs.segredo);
-  const result = await configs.pool.query(queries.updateEmailVerify, [dadosRecebidos.email]);
+  await queries.updateEmailVerify(dadosRecebidos.email);
 };
 
 const healthCheck = async (req, res) => {
