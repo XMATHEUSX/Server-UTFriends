@@ -51,7 +51,9 @@ const register = async (req, res) => {
         .json({ success: false, message: "O email já está em uso." });
     }
 
-    const nicknameExistsResult = await queries.checkNicknameExists(nickname);
+    const nicknameExistsResult = await queries.checkNicknameExists(
+      nickname.toLowerCase()
+    );
     if (nicknameExistsResult !== null) {
       return res
         .status(400)
@@ -66,7 +68,7 @@ const register = async (req, res) => {
       telphone,
       birth + "T00:00:00.000Z",
       parseInt(curso),
-      nickname
+      nickname.toLowerCase()
     );
 
     data = {

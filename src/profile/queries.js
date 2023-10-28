@@ -63,7 +63,7 @@ async function insertUserProfile(
   nickname
 ) {
   const crypt_senha =
-    await prisma.$queryRaw`SELECT crypt(${password}, gen_salt('bf'))`;
+    await prisma.$queryRaw`SELECT crypt(${senha}, gen_salt('bf'))`;
 
   await prisma.$transaction([
     prisma.conta.create({
