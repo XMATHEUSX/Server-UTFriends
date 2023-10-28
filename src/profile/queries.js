@@ -117,6 +117,7 @@ async function updateEmailVerify(email) {
 }
 
 module.exports = {
+  prisma,
   selectUser,
   checkEmailExists,
   checkNicknameExists,
