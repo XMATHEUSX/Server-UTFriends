@@ -9,6 +9,29 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model cargos {
+  cargo_id          Int                @id
+  perfil_id         Int?
+  comunidade_id     Int?
+  nm_cargo          String?            @db.VarChar(40)
+  att_01            Boolean?
+  att_02            Boolean?
+  att_03            Boolean?
+  att_04            Boolean?
+  att_05            Boolean?
+  perfil_comunidade perfil_comunidade? @relation(fields: [perfil_id, comunidade_id], references: [comunidade_id, user_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_perfil_comunidade")
+}
+
+model comunidade {
+  comunidade_id     Int                 @id
+  nm_comunidade     String              @db.VarChar(100)
+  biografia         String?             @db.VarChar(256)
+  seguidores        Json?
+  data_criacao      DateTime?           @db.Date
+  perfil_comunidade perfil_comunidade[]
+  publicacao        publicacao[]
+}
+
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 /// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
 model conta {
@@ -23,6 +46,8 @@ model conta {
   curso                        curso?   @relation(fields: [curso_id], references: [curso_id], onDelete: NoAction, onUpdate: NoAction)
   perfil_conta_user_idToperfil perfil   @relation("conta_user_idToperfil", fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction)
   perfil_perfil_user_idToconta perfil?  @relation("perfil_user_idToconta")
+
+  @@index([email], map: "email_idx")
 }
 
 model curso {
@@ -31,13 +56,52 @@ model curso {
   conta    conta[]
 }
 
+model pensamentos {
+  pensamento_id   Int     @id
+  user_id         Int?
+  ds_pensamento   String  @db.VarChar(256)
+  reposts         Int?    @default(0)
+  curtidas        Json?
+  comentarios     Json?
+  tipo_pensamento Int?
+  perfil          perfil? @relation(fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction, map: "user_id")
+
+  @@index([user_id], map: "pensamentos_user_idx")
+}
+
 /// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
 model perfil {
-  user_id                     Int     @id @default(autoincrement())
-  nickname                    String  @db.VarChar(30)
-  biografia                   String? @db.VarChar(256)
-  seguidores                  Json?   @db.Json
-  seguindo                    Json?   @db.Json
-  conta_conta_user_idToperfil conta?  @relation("conta_user_idToperfil")
-  conta_perfil_user_idToconta conta   @relation("perfil_user_idToconta", fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction)
+  user_id                     Int                 @id @default(autoincrement())
+  nickname                    String              @db.VarChar(30)
+  biografia                   String?             @default("Bem vindo ao meu perfil!") @db.VarChar(256)
+  seguidores                  Json?
+  seguindo                    Json?
+  conta_conta_user_idToperfil conta?              @relation("conta_user_idToperfil")
+  pensamentos                 pensamentos[]
+  conta_perfil_user_idToconta conta               @relation("perfil_user_idToconta", fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction)
+  perfil_comunidade           perfil_comunidade[]
+
+  @@index([nickname], map: "nickname_idx")
+}
+
+model perfil_comunidade {
+  comunidade_id Int
+  user_id       Int
+  cargos        cargos[]
+  comunidade    comunidade @relation(fields: [comunidade_id], references: [comunidade_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_comunidade_id")
+  perfil        perfil     @relation(fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_user_id")
+
+  @@id([comunidade_id, user_id], map: "pk_perfil_comunidade")
+}
+
+model publicacao {
+  publicacao_id Int         @id
+  comunidade_id Int?
+  ds_publicacao String
+  reposts       Int?        @default(0)
+  curtidas      Json?
+  comentarios   Json?
+  comunidade    comunidade? @relation(fields: [comunidade_id], references: [comunidade_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_comunidade_id")
+
+  @@index([comunidade_id], map: "publicacao_user_idx")
 }

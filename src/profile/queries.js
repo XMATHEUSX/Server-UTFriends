@@ -132,6 +132,7 @@ async function deleteUser(email,user_id){
 }
 
 module.exports = {
+  prisma,
   selectUser,
   checkEmailExists,
   checkNicknameExists,

@@ -8,6 +8,7 @@ const querystring = require("querystring");
 
 const login = async (req, res) => {
   const { email, password } = req.body;
+  queries.prisma.$connect();
   try {
     const result = await queries.selectUser(email, password);
     if (result === null) {
@@ -34,9 +35,12 @@ const login = async (req, res) => {
       .status(500)
       .json({ success: false, message: "Erro interno do servidor." });
   }
+
+  queries.prisma.$disconnect();
 };
 
 const register = async (req, res) => {
+  queries.prisma.$connect();
   const { name, email, password, nickname, telphone, birth, curso } = req.body;
   const resend = new Resend.Resend(process.env.RESEND_KEY);
   const lastUserId = await queries.findLastUserId();
@@ -105,10 +109,13 @@ const register = async (req, res) => {
       .status(500)
       .json({ success: false, message: "Erro interno do servidor." });
   }
+
+  queries.prisma.$disconnect();
 };
 
 const userInfo = async (req, res) => {
   const { token } = req.body;
+  queries.prisma.$connect();
   if (token) {
     try {
       // Verificar e decodificar o token
@@ -125,6 +132,7 @@ const userInfo = async (req, res) => {
   } else {
     console.error("Token não encontrado.");
   }
+  queries.prisma.$disconnect();
 };
 
 const verify = async (req, res) => {
@@ -136,10 +144,13 @@ const verify = async (req, res) => {
   //Todo Verificar a expirição
   const tokenVerify = params.code;
   var dadosRecebidos = jwt.verify(tokenVerify, configs.segredo);
+  queries.prisma.$connect();
   await queries.updateEmailVerify(dadosRecebidos.email);
+  queries.prisma.$disconnect();
 };
 
 const healthCheck = async (req, res) => {
+  queries.prisma.$connect();
   try {
     await configs.pool.query("SELECT NOW()");
     res.json({ success: true, message: "Servidor rodando." });
@@ -147,6 +158,7 @@ const healthCheck = async (req, res) => {
     console.error("Erro ao consultar o banco de dados:", error);
     return res.status(500).json({ success: false, message: error });
   }
+  queries.prisma.$disconnect();
 };
 
 const ok = (req, res) => {
