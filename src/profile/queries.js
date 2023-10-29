@@ -116,6 +116,21 @@ async function updateEmailVerify(email) {
   });
 }
 
+async function deleteUser(email,user_id){
+  return await prisma.$transaction([
+    prisma.conta.delete({
+      where: {
+        email: email,
+      },
+    }),
+    prisma.perfil.delete({
+      where: {
+        user_id:user_id,
+      },
+    }),
+  ]);
+}
+
 module.exports = {
   selectUser,
   checkEmailExists,
@@ -125,4 +140,5 @@ module.exports = {
   selectUserId,
   selectProfile,
   updateEmailVerify,
+  deleteUser
 };
