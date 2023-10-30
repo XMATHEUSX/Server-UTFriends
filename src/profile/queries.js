@@ -64,6 +64,8 @@ async function insertUserProfile(
 ) {
   const crypt_senha =
     await prisma.$queryRaw`SELECT crypt(${senha}, gen_salt('bf'))`;
+  const seguindo_json = { seguindo: [] };
+  const seguidores_json = { seguidores: [] };
 
   await prisma.$transaction([
     prisma.conta.create({
@@ -81,6 +83,8 @@ async function insertUserProfile(
       data: {
         user_id: user_id,
         nickname: nickname,
+        seguindo: seguindo_json,
+        seguidores: seguidores_json,
       },
     }),
   ]);
@@ -116,7 +120,7 @@ async function updateEmailVerify(email) {
   });
 }
 
-async function deleteUser(email,user_id){
+async function deleteUser(email, user_id) {
   return await prisma.$transaction([
     prisma.conta.delete({
       where: {
@@ -125,10 +129,38 @@ async function deleteUser(email,user_id){
     }),
     prisma.perfil.delete({
       where: {
-        user_id:user_id,
+        user_id: user_id,
       },
     }),
   ]);
+}
+
+async function quantidadeSeguidores(user_id) {
+  const perfil = await prisma.perfil.findFirst({
+    where: {
+      user_id: user_id,
+    },
+  });
+
+  if (perfil?.seguidores && typeof perfil?.seguidores === "object") {
+    return perfil?.seguidores.seguidores.length;
+  } else {
+    return null;
+  }
+}
+
+async function quantidadeSeguindo(user_id) {
+  const perfil = await prisma.perfil.findFirst({
+    where: {
+      user_id: user_id,
+    },
+  });
+  console.log(perfil);
+  if (perfil?.seguindo && typeof perfil?.seguindo === "object") {
+    return perfil?.seguindo.seguindo.length;
+  } else {
+    return null;
+  }
 }
 
 module.exports = {
@@ -141,5 +173,5 @@ module.exports = {
   selectUserId,
   selectProfile,
   updateEmailVerify,
-  deleteUser
+  deleteUser,
 };
