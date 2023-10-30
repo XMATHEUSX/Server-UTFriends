@@ -65,7 +65,7 @@ async function exibirComentarios(pensamento_id) {
 }
 
 async function quantidadeComentarios(pensamento_id) {
-  pensamento = await prisma.pensamentos.findFirst({
+  const pensamento = await prisma.pensamentos.findFirst({
     where: {
       pensamento_id: pensamento_id,
     },
@@ -138,7 +138,7 @@ async function exibirCurtidas(pensamento_id) {
 }
 
 async function quantidadeCurtidas(pensamento_id) {
-  pensamento = await prisma.pensamentos.findFirst({
+  const pensamento = await prisma.pensamentos.findFirst({
     where: {
       pensamento_id: pensamento_id,
     },
