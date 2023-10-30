@@ -5,8 +5,11 @@ const prisma = new PrismaClient();
 async function selectUser(email, password) {
   const userEncryptedPass =
     await prisma.$queryRaw`SELECT senha from conta where email = ${email}`;
-  const decryptedPass =
-    await prisma.$queryRaw`SELECT crypt(${password}, ${userEncryptedPass[0].senha})`;
+    if (userEncryptedPass.length === 0) {  
+      return null
+    }
+    const decryptedPass =
+  await prisma.$queryRaw`SELECT crypt(${password}, ${userEncryptedPass[0].senha})`;
 
   return prisma.conta.findFirst({
     where: {
@@ -109,6 +112,22 @@ async function selectProfile(user_id) {
   });
 }
 
+async function selectProfileFull(email) {
+  return prisma.conta.findFirst({
+    where: {
+      email: email,
+    },
+    select : {
+      perfil_conta_user_idToperfil:{
+      select: {
+        nickname: true,
+        biografia: true,
+      },
+    },
+  } 
+  });
+}
+
 async function updateEmailVerify(email) {
   return prisma.conta.update({
     where: {
@@ -172,6 +191,7 @@ module.exports = {
   insertUserProfile,
   selectUserId,
   selectProfile,
+  selectProfileFull,
   updateEmailVerify,
   deleteUser,
 };
