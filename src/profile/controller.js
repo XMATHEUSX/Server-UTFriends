@@ -19,7 +19,8 @@ const login = async (req, res) => {
         .json({ success: false, message: "Credenciais inválidas." });
     } else if (result.email_verificado) {
       //TODO ao invés de pegar só o email pegar a senha também
-      var token = jwt.sign(email, configs.segredo);
+      const user_id = await queries.selectUserId(email);
+      var token = jwt.sign(user_id.user_id, configs.segredo);
       res.json({
         success: true,
         token: token,
@@ -94,7 +95,6 @@ const register = async (req, res) => {
 
     //Construa o token JWT
     token = jwt.sign(data, configs.segredo);
-    console.log(token);
     resend.emails.send({
       from: "onboarding@resend.dev",
       to: "matheusxavier@alunos.utfpr.edu.br",
@@ -122,15 +122,12 @@ const userInfo = async (req, res) => {
   if (token) {
     try {
       // Verificar e decodificar o token
-      //Todo verificar o porque esta fazendo diversas requests 
-      var emailRecebido = jwt.verify(token, configs.segredo);
-      user = await queries.selectProfileFull(emailRecebido);
-      console.log(user)
-      const userId = await queries.selectUserId(emailRecebido);
-      const dadosProfile = await queries.selectProfile(userId.user_id);
+      //Todo verificar o porque esta fazendo diversas requests
+      var userIdRecebido = jwt.verify(token, configs.segredo);
+      user = await queries.selectProfileFull(parseInt(userIdRecebido));
       res.json({
         success: true,
-        dados: dadosProfile,
+        dados: user,
       });
     } catch (error) {
       console.error("Erro na verificação do token:", error);
@@ -156,32 +153,29 @@ const verify = async (req, res) => {
 };
 
 const update = async (req, res) => {
-  const { nick,bio, token } = req.body;
-  try{
-  var dadosRecebidos = jwt.verify(token, configs.segredo);
-  userId = await queries.selectUserId(dadosRecebidos);
-  await queries.updateNickname(userId.user_id,nick) 
-  await queries.updateBio(userId.user_id,bio) 
-  res.json({ success: true, message: "Update bem-sucedido." });
-  }catch(error){
+  const { nick, bio, token } = req.body;
+  try {
+    var dadosRecebidos = jwt.verify(token, configs.segredo);
+    userId = await queries.selectUserId(dadosRecebidos);
+    await queries.updateNickname(userId.user_id, nick);
+    await queries.updateBio(userId.user_id, bio);
+    res.json({ success: true, message: "Update bem-sucedido." });
+  } catch (error) {
     console.error("Erro ao registrar no banco de dados:", error);
 
     res
       .status(500)
       .json({ success: false, message: "Erro interno do servidor." });
-
   }
-}
+};
 
-const updatePassword = async(req,res) =>{
+const updatePassword = async (req, res) => {
   queries.prisma.$connect();
-  const {token, password} = req.body;
+  const { token, password } = req.body;
   var email = jwt.verify(token, configs.segredo);
-  console.log(password)
+  console.log(password);
   try {
-
-    await queries.updatePassword(email,password);
-
+    await queries.updatePassword(email, password);
 
     res.json({ success: true, message: "Update bem-sucedido." });
   } catch (error) {
@@ -193,41 +187,42 @@ const updatePassword = async(req,res) =>{
   }
 
   queries.prisma.$disconnect();
-}
+};
 
-const forgetPassword = async(req,res) =>{
+const forgetPassword = async (req, res) => {
   queries.prisma.$connect();
-  const {email} = req.body;
+  const { email } = req.body;
   try {
     const emailExistsResult = await queries.checkEmailExists(email);
 
     if (emailExistsResult === null) {
-      return res
-        .status(400)
-        .json({ success: false, message: "O email não esta cadastrado no sistema" });
+      return res.status(400).json({
+        success: false,
+        message: "O email não esta cadastrado no sistema",
+      });
     }
-        //Construa o token JWT
-        token = jwt.sign(email, configs.segredo);
-        console.log(token);
-        resend.emails.send({
-          from: "onboarding@resend.dev",
-          to: "matheusxavier@alunos.utfpr.edu.br",
-          subject: "Congratulations",
-          html:
-            "<p> \n Email de verificação <br> <strong>http://localhost:5173/NewPassword?code=" +
-            token +
-            "</strong></p>",
-        });
-        res.json({ success: true, message: "Registro bem-sucedido." });
-      } catch (error) {
-        console.error("Erro ao registrar no banco de dados:", error);
-    
-        res
-          .status(500)
-          .json({ success: false, message: "Erro interno do servidor." });
-      }
-      queries.prisma.$disconnect();
-}
+    //Construa o token JWT
+    token = jwt.sign(email, configs.segredo);
+    console.log(token);
+    resend.emails.send({
+      from: "onboarding@resend.dev",
+      to: "matheusxavier@alunos.utfpr.edu.br",
+      subject: "Congratulations",
+      html:
+        "<p> \n Email de verificação <br> <strong>http://localhost:5173/NewPassword?code=" +
+        token +
+        "</strong></p>",
+    });
+    res.json({ success: true, message: "Registro bem-sucedido." });
+  } catch (error) {
+    console.error("Erro ao registrar no banco de dados:", error);
+
+    res
+      .status(500)
+      .json({ success: false, message: "Erro interno do servidor." });
+  }
+  queries.prisma.$disconnect();
+};
 
 const healthCheck = async (req, res) => {
   queries.prisma.$connect();
@@ -240,8 +235,6 @@ const healthCheck = async (req, res) => {
   }
   queries.prisma.$disconnect();
 };
-
-
 
 const ok = (req, res) => {
   try {

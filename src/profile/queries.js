@@ -5,11 +5,11 @@ const prisma = new PrismaClient();
 async function selectUser(email, password) {
   const userEncryptedPass =
     await prisma.$queryRaw`SELECT senha from conta where email = ${email}`;
-    if (userEncryptedPass.length === 0) {  
-      return null
-    }
-    const decryptedPass =
-  await prisma.$queryRaw`SELECT crypt(${password}, ${userEncryptedPass[0].senha})`;
+  if (userEncryptedPass.length === 0) {
+    return null;
+  }
+  const decryptedPass =
+    await prisma.$queryRaw`SELECT crypt(${password}, ${userEncryptedPass[0].senha})`;
 
   return prisma.conta.findFirst({
     where: {
@@ -112,20 +112,33 @@ async function selectProfile(user_id) {
   });
 }
 
-async function selectProfileFull(email) {
-  return prisma.conta.findFirst({
+async function selectProfileFull(user_id) {
+  const seguidores = await quantidadeSeguidores(user_id);
+  const seguindo = await quantidadeSeguindo(user_id);
+  const pensamentos = await quantidadePensamentos(user_id);
+  let perfilData = await prisma.conta.findFirst({
     where: {
-      email: email,
+      user_id: user_id,
     },
-    select : {
-      perfil_conta_user_idToperfil:{
-      select: {
-        nickname: true,
-        biografia: true,
+    select: {
+      perfil_conta_user_idToperfil: {
+        select: {
+          nickname: true,
+          biografia: true,
+        },
       },
     },
-  } 
   });
+
+  if (perfilData) {
+    const perfil = perfilData.perfil_conta_user_idToperfil;
+    perfil.seguidores = seguidores;
+    perfil.seguindo = seguindo;
+    perfil.pensamentos = pensamentos;
+    return perfil;
+  }
+
+  return null;
 }
 
 async function updateEmailVerify(email) {
@@ -174,12 +187,19 @@ async function quantidadeSeguindo(user_id) {
       user_id: user_id,
     },
   });
-  console.log(perfil);
   if (perfil?.seguindo && typeof perfil?.seguindo === "object") {
     return perfil?.seguindo.seguindo.length;
   } else {
     return null;
   }
+}
+
+async function quantidadePensamentos(user_id) {
+  return await prisma.pensamentos.count({
+    where: {
+      user_id: user_id,
+    },
+  });
 }
 
 module.exports = {
