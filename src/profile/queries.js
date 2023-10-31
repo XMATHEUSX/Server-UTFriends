@@ -3,29 +3,20 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
 async function selectUser(email, password) {
-  const userEncryptedPass =
-    await prisma.$queryRaw`SELECT senha from conta where email = ${email}`;
-  if (userEncryptedPass.length === 0) {
-    return null;
-  }
-  const decryptedPass =
-    await prisma.$queryRaw`SELECT crypt(${password}, ${userEncryptedPass[0].senha})`;
+  const user = await prisma.$queryRaw`
+    SELECT 
+      c.user_id, nickname, email_verificado
+    FROM 
+      conta c
+    INNER JOIN 
+      perfil ON c.user_id = perfil.user_id
+    WHERE 
+      email = ${email} AND senha = crypt(${password}, senha) LIMIT 1`;
 
-  return prisma.conta.findFirst({
-    where: {
-      email: email,
-      senha: decryptedPass[0].crypt,
-    },
-    select: {
-      email_verificado: true,
-      senha: true,
-      perfil_conta_user_idToperfil: {
-        select: {
-          nickname: true,
-        },
-      },
-    },
-  });
+  if (user) {
+    return user[0];
+  }
+  return null;
 }
 
 async function checkEmailExists(email) {
@@ -113,29 +104,30 @@ async function selectProfile(user_id) {
 }
 
 async function selectProfileFull(user_id) {
-  const seguidores = await quantidadeSeguidores(user_id);
-  const seguindo = await quantidadeSeguindo(user_id);
-  const pensamentos = await quantidadePensamentos(user_id);
-  let perfilData = await prisma.conta.findFirst({
+  let perfilData = await prisma.perfil.findFirst({
     where: {
       user_id: user_id,
     },
     select: {
-      perfil_conta_user_idToperfil: {
+      user_id: true,
+      nickname: true,
+      biografia: true,
+      seguidores: true,
+      seguindo: true,
+      _count: {
         select: {
-          nickname: true,
-          biografia: true,
+          pensamentos: true,
         },
       },
     },
   });
 
   if (perfilData) {
-    const perfil = perfilData.perfil_conta_user_idToperfil;
-    perfil.seguidores = seguidores;
-    perfil.seguindo = seguindo;
-    perfil.pensamentos = pensamentos;
-    return perfil;
+    perfilData.seguindo = perfilData.seguindo.seguindo.length;
+    perfilData.seguidores = perfilData.seguidores.seguidores.length;
+    perfilData.pensamentos = perfilData._count.pensamentos;
+    delete perfilData._count;
+    return perfilData;
   }
 
   return null;

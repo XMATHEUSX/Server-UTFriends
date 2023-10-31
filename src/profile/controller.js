@@ -10,23 +10,19 @@ const resend = new Resend.Resend(process.env.RESEND_KEY);
 
 const login = async (req, res) => {
   const { email, password } = req.body;
-  queries.prisma.$connect();
   try {
-    const result = await queries.selectUser(email, password);
-    if (result === null) {
+    const user = await queries.selectUser(email, password);
+    if (user === null) {
       res
         .status(401)
         .json({ success: false, message: "Credenciais inválidas." });
-    } else if (result.email_verificado) {
+    } else if (user.email_verificado) {
       //TODO ao invés de pegar só o email pegar a senha também
-      const user_id = await queries.selectUserId(email);
-      var token = jwt.sign(user_id.user_id, configs.segredo);
+      var token = jwt.sign(user.user_id, configs.segredo);
       res.json({
         success: true,
         token: token,
-        message:
-          "Login bem-sucedido.\nBem vindo " +
-          result.perfil_conta_user_idToperfil.nickname,
+        message: "Login bem-sucedido.\nBem vindo " + user.nickname,
       });
     } else {
       res
@@ -39,8 +35,6 @@ const login = async (req, res) => {
       .status(500)
       .json({ success: false, message: "Erro interno do servidor." });
   }
-
-  queries.prisma.$disconnect();
 };
 
 const register = async (req, res) => {
