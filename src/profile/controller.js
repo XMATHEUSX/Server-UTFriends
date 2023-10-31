@@ -149,10 +149,14 @@ const verify = async (req, res) => {
 const update = async (req, res) => {
   const { nick, bio, token } = req.body;
   try {
-    var dadosRecebidos = jwt.verify(token, configs.segredo);
-    userId = await queries.selectUserId(dadosRecebidos);
-    await queries.updateNickname(userId.user_id, nick);
-    await queries.updateBio(userId.user_id, bio);
+    var user_id = jwt.verify(token, configs.segredo);
+    if (nick) {
+      await queries.updateNickname(parseInt(user_id), nick);
+    }
+    if (bio) {
+      await queries.updateBio(parseInt(user_id), bio);
+    }
+
     res.json({ success: true, message: "Update bem-sucedido." });
   } catch (error) {
     console.error("Erro ao registrar no banco de dados:", error);

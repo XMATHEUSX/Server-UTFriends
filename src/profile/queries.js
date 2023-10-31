@@ -13,7 +13,7 @@ async function selectUser(email, password) {
     WHERE 
       email = ${email} AND senha = crypt(${password}, senha) LIMIT 1`;
 
-  if (user) {
+  if (user[0]) {
     return user[0];
   }
   return null;
@@ -194,6 +194,28 @@ async function quantidadePensamentos(user_id) {
   });
 }
 
+async function updateNickname(user_id, nickname) {
+  return await prisma.perfil.update({
+    where: {
+      user_id: user_id,
+    },
+    data: {
+      nickname: nickname,
+    },
+  });
+}
+
+async function updateBio(user_id, bio) {
+  return await prisma.perfil.update({
+    where: {
+      user_id: user_id,
+    },
+    data: {
+      biografia: bio,
+    },
+  });
+}
+
 module.exports = {
   prisma,
   selectUser,
@@ -205,5 +227,7 @@ module.exports = {
   selectProfile,
   selectProfileFull,
   updateEmailVerify,
+  updateBio,
+  updateNickname,
   deleteUser,
 };
