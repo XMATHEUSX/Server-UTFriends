@@ -25,6 +25,20 @@ const login = async (req, res) => {
         message: "Login bem-sucedido.\nBem vindo " + user.nickname,
       });
     } else {
+      data = {
+        time: Date.now,
+        email: email,
+      };
+      token = jwt.sign(data, configs.segredo);
+      resend.emails.send({
+        from: "onboarding@resend.dev",
+        to: "matheusxavier@alunos.utfpr.edu.br",
+        subject: "Congratulations",
+        html:
+          "<p>email de verificação<strong>http://localhost:5173/EmailConfirmed?code=" +
+          token +
+          "</strong></p>",
+      });
       res
         .status(401)
         .json({ success: false, message: "Email não verificado." });
@@ -94,7 +108,7 @@ const register = async (req, res) => {
       to: "matheusxavier@alunos.utfpr.edu.br",
       subject: "Congratulations",
       html:
-        "<p>email de verificação<strong>http://localhost:3000/api/v1/profile/verify?code=" +
+        "<p>email de verificação<strong>http://localhost:5173/EmailConfirmed?code=" +
         token +
         "</strong></p>",
     });
@@ -118,6 +132,7 @@ const userInfo = async (req, res) => {
       // Verificar e decodificar o token
       //Todo verificar o porque esta fazendo diversas requests
       var userIdRecebido = jwt.verify(token, configs.segredo);
+      console.log(userIdRecebido)
       user = await queries.selectProfileFull(parseInt(userIdRecebido));
       res.json({
         success: true,
@@ -133,14 +148,9 @@ const userInfo = async (req, res) => {
 };
 
 const verify = async (req, res) => {
-  const parsedUrl = url.parse(req.url);
-
-  // Parse dos parâmetros da string de consulta
-  const params = querystring.parse(parsedUrl.query);
-
-  //Todo Verificar a expirição
-  const tokenVerify = params.code;
-  var dadosRecebidos = jwt.verify(tokenVerify, configs.segredo);
+  const { token} = req.body;
+  console.log("aqui")
+  var dadosRecebidos = jwt.verify(token, configs.segredo);
   queries.prisma.$connect();
   await queries.updateEmailVerify(dadosRecebidos.email);
   queries.prisma.$disconnect();
@@ -207,7 +217,7 @@ const forgetPassword = async (req, res) => {
       to: "matheusxavier@alunos.utfpr.edu.br",
       subject: "Congratulations",
       html:
-        "<p> \n Email de verificação <br> <strong>http://localhost:5173/NewPassword?code=" +
+        "<p> \n Troca de senha <br> <strong>http://localhost:5173/NewPassword?code=" +
         token +
         "</strong></p>",
     });
