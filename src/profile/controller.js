@@ -132,7 +132,6 @@ const userInfo = async (req, res) => {
       // Verificar e decodificar o token
       //Todo verificar o porque esta fazendo diversas requests
       var userIdRecebido = jwt.verify(token, configs.segredo);
-      console.log(userIdRecebido)
       user = await queries.selectProfileFull(parseInt(userIdRecebido));
       res.json({
         success: true,
@@ -148,8 +147,7 @@ const userInfo = async (req, res) => {
 };
 
 const verify = async (req, res) => {
-  const { token} = req.body;
-  console.log("aqui")
+  const { token } = req.body;
   var dadosRecebidos = jwt.verify(token, configs.segredo);
   queries.prisma.$connect();
   await queries.updateEmailVerify(dadosRecebidos.email);

@@ -199,10 +199,6 @@ async function updateBio(user_id, bio) {
   });
 }
 
-selectProfileFull02(5)
-  .then((data) => console.log(data))
-  .catch((err) => console.log(err));
-
 module.exports = {
   prisma,
   selectUser,
