@@ -1,6 +1,6 @@
 generator client {
   provider        = "prisma-client-js"
-  previewFeatures = ["postgresqlExtensions"]
+  previewFeatures = ["postgresqlExtensions", "views"]
   extensions      = ["pgcrypto"]
 }
 
@@ -26,7 +26,7 @@ model comunidade {
   comunidade_id     Int                 @id
   nm_comunidade     String              @db.VarChar(100)
   biografia         String?             @db.VarChar(256)
-  seguidores        Json?
+  seguidores        Json?               @default("{\"seguidores\": []}")
   data_criacao      DateTime?           @db.Date
   perfil_comunidade perfil_comunidade[]
   publicacao        publicacao[]
@@ -54,6 +54,8 @@ model curso {
   curso_id Int     @id @default(autoincrement())
   nm_curso String? @db.VarChar(100)
   conta    conta[]
+
+  @@index([nm_curso], map: "nm_curso_idx")
 }
 
 model pensamentos {
@@ -61,8 +63,8 @@ model pensamentos {
   user_id         Int?
   ds_pensamento   String  @db.VarChar(256)
   reposts         Int?    @default(0)
-  curtidas        Json?
-  comentarios     Json?
+  curtidas        Json?   @default("{\"curtidas\": []}")
+  comentarios     Json?   @default("{\"comentarios\": []}")
   tipo_pensamento Int?
   perfil          perfil? @relation(fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction, map: "user_id")
 
@@ -70,6 +72,7 @@ model pensamentos {
 }
 
 /// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+/// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
 model perfil {
   user_id                     Int                 @id @default(autoincrement())
   nickname                    String              @db.VarChar(30)
@@ -99,9 +102,51 @@ model publicacao {
   comunidade_id Int?
   ds_publicacao String
   reposts       Int?        @default(0)
-  curtidas      Json?
-  comentarios   Json?
+  curtidas      Json?       @default("{\"curtidas\": []}")
+  comentarios   Json?       @default("{\"comentarios\": []}")
   comunidade    comunidade? @relation(fields: [comunidade_id], references: [comunidade_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_comunidade_id")
 
   @@index([comunidade_id], map: "publicacao_user_idx")
+}
+
+/// The underlying view does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+view curtidorespensamento {
+  pensamento_id     Int?
+  curtidor_userid   Int?
+  curtidor_nickname String?
+
+  @@ignore
+}
+
+/// The underlying view does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+view feed {
+  meu_id            Int @unique
+  seguidor_nickname String?
+  ds_pensamento     String? @db.VarChar(256)
+  curtidas          Int?
+  tipo_pensamento   Int?
+}
+
+view fullprofile {
+  user_id    Int     @unique
+  nickname   String? @db.VarChar(30)
+  biografia  String? @db.VarChar(256)
+  seguidores Int?
+  seguindo   Int?
+  nm_curso   String? @db.VarChar(100)
+}
+
+view meuspensamentos {
+  pensamento_id   Int @unique
+  nickname        String? @db.VarChar(30)
+  ds_pensamento   String? @db.VarChar(256)
+  curtidas        Int?
+  tipo_pensamento Int?
+
+}
+
+view meusseguidores {
+  meu_id            Int @unique
+  seguidor_userid   Int?
+  seguidor_nickname String?
 }

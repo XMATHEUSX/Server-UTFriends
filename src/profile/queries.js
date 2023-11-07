@@ -104,32 +104,15 @@ async function selectProfile(user_id) {
 }
 
 async function selectProfileFull(user_id) {
-  let perfilData = await prisma.perfil.findFirst({
+  let perfilData = await prisma.fullprofile.findFirst({
     where: {
       user_id: user_id,
-    },
-    select: {
-      user_id: true,
-      nickname: true,
-      biografia: true,
-      seguidores: true,
-      seguindo: true,
-      _count: {
-        select: {
-          pensamentos: true,
-        },
-      },
     },
   });
 
   if (perfilData) {
-    perfilData.seguindo = perfilData.seguindo.seguindo.length;
-    perfilData.seguidores = perfilData.seguidores.seguidores.length;
-    perfilData.pensamentos = perfilData._count.pensamentos;
-    delete perfilData._count;
     return perfilData;
   }
-
   return null;
 }
 
@@ -215,6 +198,10 @@ async function updateBio(user_id, bio) {
     },
   });
 }
+
+selectProfileFull02(5)
+  .then((data) => console.log(data))
+  .catch((err) => console.log(err));
 
 module.exports = {
   prisma,
