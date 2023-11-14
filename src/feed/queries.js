@@ -159,11 +159,16 @@ async function exibirPensamentos(user_id) {
 }
 
 async function meuFeed(user_id) {
-  meuFeed = await prisma.feed.findMany({
-    where: {
-      meu_id: user_id,
-    },
-  });
+  const meuFeed = await prisma.$queryRaw`
+  SELECT DISTINCT ON (feed.pensamento_id) *, 
+         CASE
+             WHEN curtidor_userid = 1 THEN TRUE
+             ELSE FALSE
+         END AS "curtiu"
+  FROM feed
+  LEFT JOIN curtidoresPensamento Cp ON feed.pensamento_id = Cp.pensamento_id
+  WHERE meu_id = ${user_id}`;
+
   if (meuFeed) {
     return meuFeed;
   } else {

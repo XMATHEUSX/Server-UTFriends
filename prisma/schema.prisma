@@ -116,25 +116,6 @@ view curtidorespensamento {
   curtidor_nickname String?
 }
 
-view feed {
-  meu_id            Int       @unique
-  seguindo_nickname String?
-  ds_pensamento     String?   @db.VarChar(256)
-  curtidas          Int?
-  tipo_pensamento   Int?
-  data_pensamento   DateTime? @db.Timestamp(6)
-}
-
-view fullprofile {
-  user_id     Int     @unique
-  nickname    String? @db.VarChar(30)
-  biografia   String? @db.VarChar(256)
-  seguidores  Int?
-  seguindo    Int?
-  nm_curso    String? @db.VarChar(100)
-  pensamentos Int?
-}
-
 view meuspensamentos {
   pensamento_id   Int     @unique
   nickname        String? @db.VarChar(30)
@@ -153,4 +134,26 @@ view seguindo {
   meu_id            Int     @unique
   seguindo_userid   Int?
   seguindo_nickname String?
+}
+
+view feed {
+  meu_id            Int @unique
+  seguindo_nickname String?
+  ds_pensamento     String?   @db.VarChar(256)
+  curtidas          Int?
+  tipo_pensamento   Int?
+  data_pensamento   DateTime? @db.Timestamp(6)
+  curtiu            Boolean?
+
+}
+
+view fullprofile {
+  user_id     Int @unique
+  nickname    String? @db.VarChar(30)
+  biografia   String? @db.VarChar(256)
+  seguidores  Int?
+  seguindo    Int?
+  nm_curso    String? @db.VarChar(100)
+  pensamentos Int?
+
 }
