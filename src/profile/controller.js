@@ -2,9 +2,7 @@ require("dotenv").config();
 const queries = require("./queries");
 const jwt = require("jsonwebtoken");
 const Resend = require("resend");
-const url = require("url");
 const configs = require("../../config");
-const querystring = require("querystring");
 const { emit } = require("process");
 const resend = new Resend.Resend(process.env.RESEND_KEY);
 

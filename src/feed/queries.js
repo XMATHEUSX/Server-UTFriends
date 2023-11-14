@@ -158,6 +158,19 @@ async function exibirPensamentos(user_id) {
   });
 }
 
+async function meuFeed(user_id) {
+  meuFeed = await prisma.feed.findMany({
+    where: {
+      meu_id: user_id,
+    },
+  });
+  if (meuFeed) {
+    return meuFeed;
+  } else {
+    return null;
+  }
+}
+
 module.exports = {
   pensamento,
   inserirComentario,
@@ -167,4 +180,7 @@ module.exports = {
   descurtirPensamento,
   exibirCurtidas,
   quantidadeCurtidas,
+  exibirPensamentos,
+  meuFeed,
+  prisma,
 };

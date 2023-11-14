@@ -42,7 +42,7 @@ model conta {
   telefone                     String?  @db.VarChar(15)
   dt_nascimento                DateTime @db.Date
   curso_id                     Int?
-  email_verificado             Boolean? @default(false)
+  email_verificado             Boolean? @default(true)
   curso                        curso?   @relation(fields: [curso_id], references: [curso_id], onDelete: NoAction, onUpdate: NoAction)
   perfil_conta_user_idToperfil perfil   @relation("conta_user_idToperfil", fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction)
   perfil_perfil_user_idToconta perfil?  @relation("perfil_user_idToconta")
@@ -59,14 +59,15 @@ model curso {
 }
 
 model pensamentos {
-  pensamento_id   Int     @id
+  pensamento_id   Int       @id
   user_id         Int?
-  ds_pensamento   String  @db.VarChar(256)
-  reposts         Int?    @default(0)
-  curtidas        Json?   @default("{\"curtidas\": []}")
-  comentarios     Json?   @default("{\"comentarios\": []}")
-  tipo_pensamento Int?
-  perfil          perfil? @relation(fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction, map: "user_id")
+  ds_pensamento   String    @db.VarChar(256)
+  reposts         Int?      @default(0)
+  curtidas        Json?     @default("{\"curtidas\": []}")
+  comentarios     Json?     @default("{\"comentarios\": []}")
+  tipo_pensamento Int?      @default(1)
+  data_pensamento DateTime? @default(now()) @db.Timestamp(6)
+  perfil          perfil?   @relation(fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction, map: "user_id")
 
   @@index([user_id], map: "pensamentos_user_idx")
 }
@@ -109,44 +110,47 @@ model publicacao {
   @@index([comunidade_id], map: "publicacao_user_idx")
 }
 
-/// The underlying view does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
 view curtidorespensamento {
-  pensamento_id     Int?
+  pensamento_id     Int     @unique
   curtidor_userid   Int?
   curtidor_nickname String?
-
-  @@ignore
 }
 
-/// The underlying view does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
 view feed {
-  meu_id            Int @unique
-  seguidor_nickname String?
-  ds_pensamento     String? @db.VarChar(256)
+  meu_id            Int       @unique
+  seguindo_nickname String?
+  ds_pensamento     String?   @db.VarChar(256)
   curtidas          Int?
   tipo_pensamento   Int?
+  data_pensamento   DateTime? @db.Timestamp(6)
 }
 
 view fullprofile {
-  user_id    Int     @unique
-  nickname   String? @db.VarChar(30)
-  biografia  String? @db.VarChar(256)
-  seguidores Int?
-  seguindo   Int?
-  nm_curso   String? @db.VarChar(100)
+  user_id     Int     @unique
+  nickname    String? @db.VarChar(30)
+  biografia   String? @db.VarChar(256)
+  seguidores  Int?
+  seguindo    Int?
+  nm_curso    String? @db.VarChar(100)
+  pensamentos Int?
 }
 
 view meuspensamentos {
-  pensamento_id   Int @unique
+  pensamento_id   Int     @unique
   nickname        String? @db.VarChar(30)
   ds_pensamento   String? @db.VarChar(256)
   curtidas        Int?
   tipo_pensamento Int?
-
 }
 
 view meusseguidores {
-  meu_id            Int @unique
+  meu_id            Int     @unique
   seguidor_userid   Int?
   seguidor_nickname String?
+}
+
+view seguindo {
+  meu_id            Int     @unique
+  seguindo_userid   Int?
+  seguindo_nickname String?
 }
