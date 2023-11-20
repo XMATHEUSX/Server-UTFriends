@@ -12,6 +12,6 @@ app.use(cors());
 
 app.use("/api/v1/profile", profileRouter);
 
-app.listen(port, () => {
-  console.log(`Servidor rodando em http://localhost:${port}`);
+app.listen(process.env.PORT|| 3000, () => {
+  console.log(`Servidor rodando em http://localhost:${process.env.PORT}`);
 });
