@@ -3,7 +3,7 @@ const queries = require("./queries");
 const jwt = require("jsonwebtoken");
 const configs = require("../../config");
 
-const getFeed = async (req, res) => {
+const buscarFeed = async (req, res) => {
   const { token } = req.body;
   queries.prisma.$connect();
   if (token) {
@@ -29,6 +29,38 @@ const getFeed = async (req, res) => {
   queries.prisma.$disconnect();
 };
 
+const curtirPensamento = async (req, res) => {
+  const { pensamento_id, user_info } = req.body;
+  queries.prisma.$connect();
+  if (pensamento_id) {
+    try {
+      const curtida = await queries.curtirPensamento(
+        parseInt(pensamento_id),
+        user_info
+      );
+      if (curtida) {
+        res.status(200).json({ success: true, curtida: curtida });
+      } else {
+        res
+          .status(401)
+          .json({ success: false, message: "Erro ao curtir o pensamento." });
+      }
+    } catch (error) {
+      console.error("Erro ao consultar o banco de dados:", error);
+      res
+        .status(500)
+        .json({ success: false, message: "Erro interno do servidor." });
+    }
+  } else {
+    res.status(400).json({
+      success: false,
+      message: "UserId ou pensamento_id não informado.",
+    });
+  }
+  queries.prisma.$disconnect();
+};
+
 module.exports = {
-  getFeed,
+  buscarFeed,
+  curtirPensamento,
 };

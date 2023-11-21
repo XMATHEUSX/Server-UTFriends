@@ -35,6 +35,19 @@ async function checkNicknameExists(nickname) {
   });
 }
 
+async function updatePassword(email, password) {
+  const crypt_senha =
+    await prisma.$queryRaw`SELECT crypt(${password}, gen_salt('bf'))`;
+  return prisma.conta.update({
+    where: {
+      email: email,
+    },
+    data: {
+      senha: crypt_senha[0].crypt,
+    },
+  });
+}
+
 async function findLastUserId() {
   return prisma.conta.findFirst({
     orderBy: {
@@ -212,5 +225,6 @@ module.exports = {
   updateEmailVerify,
   updateBio,
   updateNickname,
+  updatePassword,
   deleteUser,
 };
