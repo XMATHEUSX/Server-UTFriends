@@ -84,46 +84,39 @@ async function curtirPensamento(pensamento_id, user_info) {
       pensamento_id: pensamento_id,
     },
   });
+
   if (pensamento?.curtidas && typeof pensamento?.curtidas === "object") {
     const curtidas = pensamento?.curtidas;
-
-    curtidas.curtidas.push(user_info);
-    return prisma.pensamentos.update({
-      where: {
-        pensamento_id: pensamento_id,
-      },
-      data: {
-        curtidas: curtidas,
-      },
-    });
-  } else {
-    return null;
-  }
-}
-
-async function descurtirPensamento(pensamento_id, user_id) {
-  const pensamento = await prisma.pensamentos.findFirst({
-    where: {
-      pensamento_id: pensamento_id,
-    },
-  });
-  if (pensamento?.curtidas && typeof pensamento?.curtidas === "object") {
-    const curtidas = pensamento?.curtidas;
-    curtidas.curtidas = curtidas.curtidas.filter(
-      (item) => item.user_id !== user_id
+    const curtiu = curtidas.curtidas.some(
+      (item) => item.user_id === user_info.user_id
     );
-    return prisma.pensamentos.update({
-      where: {
-        pensamento_id: pensamento_id,
-      },
-      data: {
-        curtidas: curtidas,
-      },
-    });
-  } else {
-    return null;
+
+    if (curtiu) {
+      curtidas.curtidas = curtidas.curtidas.filter(
+        (item) => item.user_id !== user_info.user_id
+      );
+      return prisma.pensamentos.update({
+        where: {
+          pensamento_id: pensamento_id,
+        },
+        data: {
+          curtidas: curtidas,
+        },
+      });
+    } else {
+      curtidas.curtidas.push(user_info);
+      return prisma.pensamentos.update({
+        where: {
+          pensamento_id: pensamento_id,
+        },
+        data: {
+          curtidas: curtidas,
+        },
+      });
+    }
   }
 }
+
 async function exibirCurtidas(pensamento_id) {
   const pensamento = await prisma.pensamentos.findFirst({
     where: {
@@ -159,21 +152,11 @@ async function exibirPensamentos(user_id) {
 }
 
 async function meuFeed(user_id) {
-  const meuFeed = await prisma.$queryRaw`
-  SELECT DISTINCT ON (feed.pensamento_id) *, 
-         CASE
-             WHEN curtidor_userid = 1 THEN TRUE
-             ELSE FALSE
-         END AS "curtiu"
-  FROM feed
-  LEFT JOIN curtidoresPensamento Cp ON feed.pensamento_id = Cp.pensamento_id
-  WHERE meu_id = ${user_id}`;
-
-  if (meuFeed) {
-    return meuFeed;
-  } else {
-    return null;
-  }
+  return prisma.feed.findMany({
+    where: {
+      meu_id: user_id,
+    },
+  });
 }
 
 module.exports = {
@@ -182,7 +165,6 @@ module.exports = {
   exibirComentarios,
   quantidadeComentarios,
   curtirPensamento,
-  descurtirPensamento,
   exibirCurtidas,
   quantidadeCurtidas,
   exibirPensamentos,

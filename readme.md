@@ -75,7 +75,7 @@ Para inicialziar o servidor utilize o seguinte comando
 npm run start:dev
 ```
 
-Este comando inicializará o serviço em [http://localhost:5173/](http://localhost:3000/)
+Este comando inicializará o serviço em [http://localhost:3000/](http://localhost:3000/)
 
 Para certificar-se que está com acesso ao banco acesse a rota [/healthCheck](http://localhost:3000/api/v1/profile/healthCheck)
 

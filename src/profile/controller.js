@@ -97,8 +97,6 @@ const register = async (req, res) => {
     // Calcular a hora de expiração adicionando uma hora (3600 segundos) ao tempo atual
     var expirationTime = now + 3600000; // 3600 segundos * 1000 milissegundos/segundo
 
-    console.log(expirationTime);
-
     //Construa o token JWT
     token = jwt.sign(data, configs.segredo);
     resend.emails.send({
@@ -207,7 +205,6 @@ const forgetPassword = async (req, res) => {
     }
     //Construa o token JWT
     token = jwt.sign(email, configs.segredo);
-    console.log(token);
     resend.emails.send({
       from: "onboarding@resend.dev",
       to: "matheusxavier@alunos.utfpr.edu.br",

@@ -1,4 +1,5 @@
 SELECT
+  perfil.user_id,
   pensamentos.pensamento_id,
   perfil.nickname,
   pensamentos.ds_pensamento,
