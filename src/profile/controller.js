@@ -151,7 +151,7 @@ const verify = async (req, res) => {
 };
 
 const update = async (req, res) => {
-  const { nick, bio, token } = req.body;
+  const { nick, bio, curso, token } = req.body;
   try {
     var user_id = jwt.verify(token, configs.segredo);
     if (nick) {
@@ -159,6 +159,10 @@ const update = async (req, res) => {
     }
     if (bio) {
       await queries.updateBio(parseInt(user_id), bio);
+    }
+
+    if (curso) {
+      await queries.updateCurso(parseInt(user_id), parseInt(curso));
     }
 
     res.json({ success: true, message: "Update bem-sucedido." });

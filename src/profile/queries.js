@@ -212,6 +212,17 @@ async function updateBio(user_id, bio) {
   });
 }
 
+async function updateCurso(user_id, curso_id) {
+  return await prisma.conta.update({
+    where: {
+      user_id: user_id,
+    },
+    data: {
+      curso_id: curso_id,
+    },
+  });
+}
+
 module.exports = {
   prisma,
   selectUser,
@@ -226,5 +237,6 @@ module.exports = {
   updateBio,
   updateNickname,
   updatePassword,
+  updateCurso,
   deleteUser,
 };
