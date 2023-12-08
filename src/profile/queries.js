@@ -19,6 +19,20 @@ async function selectUser(email, password) {
   return null;
 }
 
+async function infoConta(user_id){
+  return prisma.conta.findFirst({
+    select: {
+      nm_usuario: true,
+      email: true,
+      telefone: true,
+      dt_nascimento:true,
+    },
+    where: {
+      user_id: user_id,
+    }
+  })
+}
+
 async function checkEmailExists(email) {
   return prisma.conta.findFirst({
     where: {
@@ -140,11 +154,11 @@ async function updateEmailVerify(email) {
   });
 }
 
-async function deleteUser(email, user_id) {
+async function deleteUser(user_id) {
   return await prisma.$transaction([
     prisma.conta.delete({
       where: {
-        email: email,
+        user_id: user_id,
       },
     }),
     prisma.perfil.delete({
@@ -239,4 +253,5 @@ module.exports = {
   updatePassword,
   updateCurso,
   deleteUser,
+  infoConta,
 };

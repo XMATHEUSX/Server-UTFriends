@@ -60,7 +60,16 @@ const curtirPensamento = async (req, res) => {
   queries.prisma.$disconnect();
 };
 
+const searchProfile = async(req,res) =>{
+  const{busca} = req.body;
+  queries.prisma.$connect();
+  const profiles = await queries.buscaNickname(busca);
+  console.log(profiles)
+  res.status(200).json({ success: true, profiles: profiles});
+};
+
 module.exports = {
   buscarFeed,
   curtirPensamento,
+  searchProfile,
 };

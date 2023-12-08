@@ -7,6 +7,8 @@ router.post("/register", controller.register);
 router.post("/user", controller.userInfo);
 router.post("/verify", controller.verify);
 router.post("/update", controller.update);
+router.post("/delete", controller.deleteUser);
+router.post("/infoConta", controller.infoConta);
 router.post("/updatepassword", controller.updatePassword);
 router.post("/forgetpassword", controller.forgetPassword);
 router.get("/healthcheck", controller.healthCheck);

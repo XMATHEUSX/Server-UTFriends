@@ -23,9 +23,11 @@ const login = async (req, res) => {
         message: "Login bem-sucedido.\nBem vindo " + user.nickname,
       });
     } else {
+      console.log(user.user_id)
       data = {
         time: Date.now,
         email: email,
+        user_id: user.user_id,
       };
       token = jwt.sign(data, configs.segredo);
       resend.emails.send({
@@ -84,11 +86,12 @@ const register = async (req, res) => {
       parseInt(curso),
       nickname.toLowerCase()
     );
-
+console.log(user.user_id)
     data = {
       time: Date.now,
       email: email,
       password: password,
+      user_id: user.user_id,
     };
 
     // Obter o tempo atual em milissegundos
@@ -142,6 +145,16 @@ const userInfo = async (req, res) => {
   queries.prisma.$disconnect();
 };
 
+const infoConta = async(req, res) => {
+  const { token } = req.body;
+  var dadosRecebidos = jwt.verify(token, configs.segredo);
+  queries.prisma.$connect();
+  const info = await queries.infoConta(parseInt(dadosRecebidos));
+  console.log(info)
+  queries.prisma.$disconnect();
+  res.status(200).json({ success: true, info:info});
+};
+
 const verify = async (req, res) => {
   const { token } = req.body;
   var dadosRecebidos = jwt.verify(token, configs.segredo);
@@ -149,6 +162,17 @@ const verify = async (req, res) => {
   await queries.updateEmailVerify(dadosRecebidos.email);
   queries.prisma.$disconnect();
 };
+
+const deleteUser = async (req, res) => {
+  const {token} = req.body;
+  var dadosRecebidos = jwt.verify(token, configs.segredo);
+  console.log(dadosRecebidos)
+  queries.prisma.$connect();
+  await queries.deleteUser(parseInt(dadosRecebidos));
+  res.status(200).json({ success: true});
+  queries.prisma.$disconnect();
+};
+
 
 const update = async (req, res) => {
   const { nick, bio, curso, token } = req.body;
@@ -253,7 +277,9 @@ module.exports = {
   login,
   register,
   userInfo,
+  infoConta,
   verify,
+  deleteUser,
   update,
   updatePassword,
   forgetPassword,

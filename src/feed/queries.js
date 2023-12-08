@@ -28,6 +28,23 @@ async function totalPensamentos(user_id) {
   });
 }
 
+async function buscaNickname(busca) {
+  console.log(busca);
+  try {
+    const searchProfile = await prisma.perfil.findMany({
+      where: {
+        nickname: {
+          contains: busca,
+        },
+      },
+    });
+    return searchProfile;
+  } catch (error) {
+    console.error('Erro na consulta:', error);
+    throw error;
+  }
+}
+
 async function inserirComentario(pensamento_id, comentario) {
   const pensamento = await prisma.pensamentos.findFirst({
     where: {
@@ -162,6 +179,7 @@ async function meuFeed(user_id) {
 module.exports = {
   pensamento,
   inserirComentario,
+  buscaNickname,
   exibirComentarios,
   quantidadeComentarios,
   curtirPensamento,
