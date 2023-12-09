@@ -6,26 +6,23 @@ const configs = require("../../config");
 const buscarFeed = async (req, res) => {
   const { token } = req.body;
   queries.prisma.$connect();
-  if (token) {
-    try {
-      const userIdRecebido = jwt.verify(token, configs.segredo);
-      const feed = await queries.meuFeed(parseInt(userIdRecebido));
-      if (feed) {
-        res.status(200).json({ success: true, feed: feed });
-      } else {
-        res
-          .status(401)
-          .json({ success: false, message: "Erro ao carregar o feed." });
-      }
-    } catch (error) {
-      console.error("Erro ao consultar o banco de dados:", error);
+  try {
+    const userIdRecebido = jwt.verify(token, configs.segredo);
+    const feed = await queries.meuFeed(parseInt(userIdRecebido));
+    if (feed) {
+      res.status(200).json({ success: true, feed: feed });
+    } else {
       res
-        .status(500)
-        .json({ success: false, message: "Erro interno do servidor." });
+        .status(401)
+        .json({ success: false, message: "Erro ao carregar o feed." });
     }
-  } else {
-    res.status(400).json({ success: false, message: "UserId não informado." }); // Bad request
+  } catch (error) {
+    console.error("Erro ao consultar o banco de dados:", error);
+    res
+      .status(500)
+      .json({ success: false, message: "Erro interno do servidor." });
   }
+
   queries.prisma.$disconnect();
 };
 
@@ -60,7 +57,31 @@ const curtirPensamento = async (req, res) => {
   queries.prisma.$disconnect();
 };
 
+const exibirMeusPensamentos = async (req, res) => {
+  queries.prisma.$connect();
+  try {
+    const pensamentos = await queries.exibirMeusPensamentos(
+      parseInt(userIdRecebido)
+    );
+    if (pensamentos) {
+      res.status(200).json({ success: true, pensamentos: pensamentos });
+    } else {
+      res.status(401).json({
+        success: false,
+        message: "Erro ao carregar os pensamentos.",
+      });
+    }
+  } catch (error) {
+    console.error("Erro ao consultar o banco de dados:", error);
+    res
+      .status(500)
+      .json({ success: false, message: "Erro interno do servidor." });
+  }
+  queries.prisma.$disconnect();
+};
+
 module.exports = {
   buscarFeed,
   curtirPensamento,
+  exibirMeusPensamentos,
 };

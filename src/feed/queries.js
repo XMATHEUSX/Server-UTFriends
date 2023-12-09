@@ -143,7 +143,7 @@ async function quantidadeCurtidas(pensamento_id) {
   }
 }
 
-async function exibirPensamentos(user_id) {
+async function exibirMeusPensamentos(user_id) {
   return prisma.pensamentos.findMany({
     where: {
       user_id: user_id,
@@ -167,7 +167,7 @@ module.exports = {
   curtirPensamento,
   exibirCurtidas,
   quantidadeCurtidas,
-  exibirPensamentos,
+  exibirMeusPensamentos,
   meuFeed,
   prisma,
 };
