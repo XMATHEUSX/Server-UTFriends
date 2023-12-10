@@ -5,7 +5,6 @@ const configs = require("../../config");
 
 const buscarFeed = async (req, res) => {
   const { token } = req.body;
-  queries.prisma.$connect();
   try {
     const userIdRecebido = jwt.verify(token, configs.segredo);
     const feed = await queries.meuFeed(parseInt(userIdRecebido));
@@ -22,13 +21,10 @@ const buscarFeed = async (req, res) => {
       .status(500)
       .json({ success: false, message: "Erro interno do servidor." });
   }
-
-  queries.prisma.$disconnect();
 };
 
 const curtirPensamento = async (req, res) => {
   const { pensamento_id, user_info } = req.body;
-  queries.prisma.$connect();
   if (pensamento_id) {
     try {
       const curtida = await queries.curtirPensamento(
@@ -54,18 +50,36 @@ const curtirPensamento = async (req, res) => {
       message: "UserId ou pensamento_id não informado.",
     });
   }
-  queries.prisma.$disconnect();
 };
 
 const searchProfile = async (req, res) => {
   const { busca } = req.body;
-  queries.prisma.$connect();
   const profiles = await queries.buscaNickname(busca);
   res.status(200).json({ success: true, profiles: profiles });
+};
+
+const inserirPensamento = async (req, res) => {
+  const { token, ds_pensamento } = req.body;
+  const userIdRecebido = jwt.verify(token, configs.segredo);
+
+  const pensamento = await queries.inserirPensamento(
+    parseInt(userIdRecebido),
+    ds_pensamento
+  );
+  if (pensamento) {
+    console.log("Pensamento inserido com sucesso!");
+    console.log(pensamento);
+    res.status(200).json({ success: true, pensamento: pensamento });
+  } else {
+    res
+      .status(401)
+      .json({ success: false, message: "Erro ao inserir o pensamento." });
+  }
 };
 
 module.exports = {
   buscarFeed,
   curtirPensamento,
   searchProfile,
+  inserirPensamento,
 };

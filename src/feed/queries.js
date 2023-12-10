@@ -2,7 +2,7 @@ const { PrismaClient } = require("@prisma/client");
 
 const prisma = new PrismaClient();
 
-async function pensamento(user_id, ds_pensamento, tipo_pensamento) {
+async function inserirPensamento(user_id, ds_pensamento, tipo_pensamento) {
   const coments_json = { comentarios: [] };
   const curtidas_json = { curtidas: [] };
 
@@ -13,7 +13,7 @@ async function pensamento(user_id, ds_pensamento, tipo_pensamento) {
       pensamento_id: user_id * 1000 + (totalPensamentosUser + 1),
       user_id: user_id,
       ds_pensamento: ds_pensamento,
-      tipo_pensamento: tipo_pensamento,
+      tipo_pensamento: 1,
       comentarios: coments_json,
       curtidas: curtidas_json,
     },
@@ -175,10 +175,8 @@ async function meuFeed(user_id) {
   });
 }
 
-// exibirMeusPensamentos(5).then((result) => console.log(result));
-
 module.exports = {
-  pensamento,
+  inserirPensamento,
   inserirComentario,
   buscaNickname,
   exibirComentarios,
@@ -188,5 +186,5 @@ module.exports = {
   quantidadeCurtidas,
   exibirMeusPensamentos,
   meuFeed,
-  prisma,
+  inserirComentario,
 };
