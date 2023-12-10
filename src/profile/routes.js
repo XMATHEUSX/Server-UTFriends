@@ -9,6 +9,7 @@ router.post("/verify", controller.verify);
 router.post("/update", controller.update);
 router.post("/delete", controller.deleteUser);
 router.post("/infoConta", controller.infoConta);
+router.post("/exibirmeuspensamentos", controller.exibirMeusPensamentos);
 router.post("/updatepassword", controller.updatePassword);
 router.post("/forgetpassword", controller.forgetPassword);
 router.get("/healthcheck", controller.healthCheck);

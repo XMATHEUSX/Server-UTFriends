@@ -19,18 +19,18 @@ async function selectUser(email, password) {
   return null;
 }
 
-async function infoConta(user_id){
+async function infoConta(user_id) {
   return prisma.conta.findFirst({
     select: {
       nm_usuario: true,
       email: true,
       telefone: true,
-      dt_nascimento:true,
+      dt_nascimento: true,
     },
     where: {
       user_id: user_id,
-    }
-  })
+    },
+  });
 }
 
 async function checkEmailExists(email) {
@@ -237,6 +237,14 @@ async function updateCurso(user_id, curso_id) {
   });
 }
 
+async function exibirMeusPensamentos(user_id) {
+  return prisma.pensamentos.findMany({
+    where: {
+      user_id: user_id,
+    },
+  });
+}
+
 module.exports = {
   prisma,
   selectUser,
@@ -254,4 +262,5 @@ module.exports = {
   updateCurso,
   deleteUser,
   infoConta,
+  exibirMeusPensamentos,
 };

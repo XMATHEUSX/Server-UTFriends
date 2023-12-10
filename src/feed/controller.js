@@ -57,40 +57,15 @@ const curtirPensamento = async (req, res) => {
   queries.prisma.$disconnect();
 };
 
-const exibirMeusPensamentos = async (req, res) => {
-  queries.prisma.$connect();
-  try {
-    const pensamentos = await queries.exibirMeusPensamentos(
-      parseInt(userIdRecebido)
-    );
-    if (pensamentos) {
-      res.status(200).json({ success: true, pensamentos: pensamentos });
-    } else {
-      res.status(401).json({
-        success: false,
-        message: "Erro ao carregar os pensamentos.",
-      });
-    }
-  } catch (error) {
-    console.error("Erro ao consultar o banco de dados:", error);
-    res
-      .status(500)
-      .json({ success: false, message: "Erro interno do servidor." });
-  }
-  queries.prisma.$disconnect();
-};
-
 const searchProfile = async (req, res) => {
   const { busca } = req.body;
   queries.prisma.$connect();
   const profiles = await queries.buscaNickname(busca);
-  console.log(profiles);
   res.status(200).json({ success: true, profiles: profiles });
 };
 
 module.exports = {
   buscarFeed,
   curtirPensamento,
-  exibirMeusPensamentos,
   searchProfile,
 };

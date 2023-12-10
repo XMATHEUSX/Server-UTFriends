@@ -23,7 +23,7 @@ const login = async (req, res) => {
         message: "Login bem-sucedido.\nBem vindo " + user.nickname,
       });
     } else {
-      console.log(user.user_id)
+      // console.log(user.user_id)
       data = {
         time: Date.now,
         email: email,
@@ -52,7 +52,7 @@ const login = async (req, res) => {
 };
 
 const register = async (req, res) => {
-  queries.prisma.$connect();
+  await queries.prisma.$connect();
   const { name, email, password, nickname, telphone, birth, curso } = req.body;
   const resend = new Resend.Resend(process.env.RESEND_KEY);
   const lastUserId = await queries.findLastUserId();
@@ -86,7 +86,7 @@ const register = async (req, res) => {
       parseInt(curso),
       nickname.toLowerCase()
     );
-console.log(user.user_id)
+    // console.log(user.user_id)
     data = {
       time: Date.now,
       email: email,
@@ -120,12 +120,12 @@ console.log(user.user_id)
       .json({ success: false, message: "Erro interno do servidor." });
   }
 
-  queries.prisma.$disconnect();
+  await queries.prisma.$disconnect();
 };
 
 const userInfo = async (req, res) => {
   const { token } = req.body;
-  queries.prisma.$connect();
+  await queries.prisma.$connect();
   if (token) {
     try {
       // Verificar e decodificar o token
@@ -142,17 +142,17 @@ const userInfo = async (req, res) => {
   } else {
     console.error("Token não encontrado.");
   }
-  queries.prisma.$disconnect();
+  await queries.prisma.$disconnect();
 };
 
-const infoConta = async(req, res) => {
+const infoConta = async (req, res) => {
   const { token } = req.body;
   var dadosRecebidos = jwt.verify(token, configs.segredo);
   queries.prisma.$connect();
   const info = await queries.infoConta(parseInt(dadosRecebidos));
-  console.log(info)
+  // console.log(info);
   queries.prisma.$disconnect();
-  res.status(200).json({ success: true, info:info});
+  res.status(200).json({ success: true, info: info });
 };
 
 const verify = async (req, res) => {
@@ -164,15 +164,14 @@ const verify = async (req, res) => {
 };
 
 const deleteUser = async (req, res) => {
-  const {token} = req.body;
+  const { token } = req.body;
   var dadosRecebidos = jwt.verify(token, configs.segredo);
-  console.log(dadosRecebidos)
+  // console.log(dadosRecebidos);
   queries.prisma.$connect();
   await queries.deleteUser(parseInt(dadosRecebidos));
-  res.status(200).json({ success: true});
+  res.status(200).json({ success: true });
   queries.prisma.$disconnect();
 };
-
 
 const update = async (req, res) => {
   const { nick, bio, curso, token } = req.body;
@@ -200,10 +199,10 @@ const update = async (req, res) => {
 };
 
 const updatePassword = async (req, res) => {
-  queries.prisma.$connect();
+  await queries.prisma.$connect();
   const { token, password } = req.body;
   var email = jwt.verify(token, configs.segredo);
-  console.log(password);
+  // console.log(password);
   try {
     await queries.updatePassword(email, password);
 
@@ -220,7 +219,7 @@ const updatePassword = async (req, res) => {
 };
 
 const forgetPassword = async (req, res) => {
-  queries.prisma.$connect();
+  await queries.prisma.$connect();
   const { email } = req.body;
   try {
     const emailExistsResult = await queries.checkEmailExists(email);
@@ -253,8 +252,33 @@ const forgetPassword = async (req, res) => {
   queries.prisma.$disconnect();
 };
 
+const exibirMeusPensamentos = async (req, res) => {
+  await queries.prisma.$connect();
+  const { token } = req.body;
+  try {
+    const userIdRecebido = jwt.verify(token, configs.segredo);
+    const pensamentos = await queries.exibirMeusPensamentos(
+      parseInt(userIdRecebido)
+    );
+    if (pensamentos) {
+      res.status(200).json({ success: true, pensamentos: pensamentos });
+    } else {
+      res.status(401).json({
+        success: false,
+        message: "Erro ao carregar os pensamentos.",
+      });
+    }
+  } catch (error) {
+    console.error("Erro ao consultar o banco de dados:", error);
+    res
+      .status(500)
+      .json({ success: false, message: "Erro interno do servidor." });
+  }
+  queries.prisma.$disconnect();
+};
+
 const healthCheck = async (req, res) => {
-  queries.prisma.$connect();
+  await queries.prisma.$connect();
   try {
     await configs.pool.query("SELECT NOW()");
     res.json({ success: true, message: "Servidor rodando." });
@@ -284,5 +308,6 @@ module.exports = {
   updatePassword,
   forgetPassword,
   healthCheck,
+  exibirMeusPensamentos,
   ok,
 };

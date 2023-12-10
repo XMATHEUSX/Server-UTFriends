@@ -29,7 +29,6 @@ async function totalPensamentos(user_id) {
 }
 
 async function buscaNickname(busca) {
-  console.log(busca);
   try {
     const searchProfile = await prisma.perfil.findMany({
       where: {
@@ -40,7 +39,7 @@ async function buscaNickname(busca) {
     });
     return searchProfile;
   } catch (error) {
-    console.error('Erro na consulta:', error);
+    console.error("Erro na consulta:", error);
     throw error;
   }
 }
@@ -175,6 +174,8 @@ async function meuFeed(user_id) {
     },
   });
 }
+
+// exibirMeusPensamentos(5).then((result) => console.log(result));
 
 module.exports = {
   pensamento,
