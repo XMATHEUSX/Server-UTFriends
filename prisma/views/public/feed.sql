@@ -36,4 +36,4 @@ FROM
     JOIN perfil ON ((seguindo.meu_id = perfil.user_id))
   )
 ORDER BY
-  pensamentos.data_pensamento;
+  pensamentos.data_pensamento DESC;
