@@ -160,9 +160,15 @@ const userSearch = async (req, res) => {
       pensamentos = await queries.exibirMeusPensamentos(id.user_id);
       console.log(user);
       console.log("Pensamenots:", pensamentos);
+
+      full_profile = {
+        perfil: user,
+        pensamentos: pensamentos,
+      };
+
       res.json({
         success: true,
-        dados: user,
+        dados: full_profile,
       });
     } catch (error) {
       console.error("Erro na passagem do id:", error);
