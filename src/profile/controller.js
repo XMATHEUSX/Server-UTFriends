@@ -150,15 +150,16 @@ const userInfo = async (req, res) => {
 
 const userSearch = async (req, res) => {
   const { nickname } = req.body;
-  console.log(nickname);
   await queries.prisma.$connect();
   if (nickname) {
     try {
       //Todo verificar o porque esta fazendo diversas requests
-      id = await queries.selectUserNickname(nickname);
-      console.log(id.user_id);
+      const id = await queries.selectUserNickname(nickname);
+      console.log(nickname, id.user_id);
       user = await queries.selectProfileFull(id.user_id);
+      pensamentos = await queries.exibirMeusPensamentos(id.user_id);
       console.log(user);
+      console.log("Pensamenots:", pensamentos);
       res.json({
         success: true,
         dados: user,
