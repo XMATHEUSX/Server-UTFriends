@@ -210,6 +210,9 @@ async function updateEmailVerify(email) {
 }
 
 async function deleteUser(user_id) {
+  await prisma.$queryRaw`
+  delete from pensamentos
+  where user_id = ${user_id}`;
   return await prisma.$transaction([
     prisma.conta.delete({
       where: {
@@ -221,6 +224,7 @@ async function deleteUser(user_id) {
         user_id: user_id,
       },
     }),
+    
   ]);
 }
 
