@@ -19,7 +19,7 @@ async function selectUser(email, password) {
   return null;
 }
 
-async function verifyPassword(user_id,password) {
+async function verifyPassword(user_id, password) {
   const user = await prisma.$queryRaw`
     SELECT 
       user_id
@@ -173,7 +173,7 @@ async function selectProfileFull(user_id) {
     where: {
       user_id: user_id,
     },
-  })
+  });
   if (perfilData) {
     //perfilData.seguindo = perfilData.seguindo.seguindo.length;
     //perfilData.seguidores = perfilData.seguidores.seguidores.length;
@@ -183,13 +183,13 @@ async function selectProfileFull(user_id) {
 }
 
 async function selectProfileFullNickname(nickname) {
-  console.log(nickname)
+  console.log(nickname);
   let perfilData = await prisma.perfil.findFirst({
     where: {
       nickname: nickname,
     },
-  })
-  console.log(perfilData)
+  });
+  console.log(perfilData);
   if (perfilData) {
     //perfilData.seguindo = perfilData.seguindo.seguindo.length;
     //perfilData.seguidores = perfilData.seguidores.seguidores.length;

@@ -9,14 +9,13 @@ const resend = new Resend.Resend(process.env.RESEND_KEY);
 const login = async (req, res) => {
   const { email, password } = req.body;
   try {
-    console.log(email,password)
+    console.log(email, password);
     const user = await queries.selectUser(email, password);
-    console.log(user)
+    console.log(user);
     if (user === null) {
       res
         .status(401)
         .json({ success: false, message: "Credenciais inválidas." });
-        
     } else if (user.email_verificado) {
       //TODO ao invés de pegar só o email pegar a senha também
       var token = jwt.sign(user.user_id, configs.segredo);
@@ -53,7 +52,6 @@ const login = async (req, res) => {
       .json({ success: false, message: "Erro interno do servidor." });
   }
 };
-
 
 const register = async (req, res) => {
   await queries.prisma.$connect();
@@ -134,7 +132,7 @@ const userInfo = async (req, res) => {
     try {
       // Verificar e decodificar o token
       //Todo verificar o porque esta fazendo diversas requests
-      console.log(token)
+      console.log(token);
       var userIdRecebido = jwt.verify(token, configs.segredo);
       user = await queries.selectProfileFull(parseInt(userIdRecebido));
       res.json({
@@ -152,15 +150,15 @@ const userInfo = async (req, res) => {
 
 const userSearch = async (req, res) => {
   const { nickname } = req.body;
-  console.log(nickname)
+  console.log(nickname);
   await queries.prisma.$connect();
   if (nickname) {
     try {
       //Todo verificar o porque esta fazendo diversas requests
       id = await queries.selectUserNickname(nickname);
-      console.log(id.user_id)
+      console.log(id.user_id);
       user = await queries.selectProfileFull(id.user_id);
-      console.log(user)
+      console.log(user);
       res.json({
         success: true,
         dados: user,
@@ -192,23 +190,25 @@ const verify = async (req, res) => {
   queries.prisma.$disconnect();
 };
 
-const verifyPassword = async (req,res) =>{
-  const { token,passwordAtual,passwordNovo} = req.body;
-  try{
-  var userId = jwt.verify(token, configs.segredo);
-  await queries.prisma.$connect();
-  user = await queries.verifyPassword(parseInt(userId),passwordAtual)
-  if (user!= null){
-    await queries.updatePasswordToken(parseInt(userId),passwordNovo)
-    res.status(200).json({ success: true });
-  }else{
-  res.status(401).json({ success: false,message: "senha errada."});
+const verifyPassword = async (req, res) => {
+  const { token, passwordAtual, passwordNovo } = req.body;
+  try {
+    var userId = jwt.verify(token, configs.segredo);
+    await queries.prisma.$connect();
+    user = await queries.verifyPassword(parseInt(userId), passwordAtual);
+    if (user != null) {
+      await queries.updatePasswordToken(parseInt(userId), passwordNovo);
+      res.status(200).json({ success: true });
+    } else {
+      res.status(401).json({ success: false, message: "senha errada." });
+    }
+  } catch (error) {
+    console.error("Erro ao consultar o banco de dados:", error);
+    res
+      .status(500)
+      .json({ success: false, message: "Erro interno do servidor." });
   }
-} catch (error) {
-  console.error("Erro ao consultar o banco de dados:", error);
-  res.status(500).json({ success: false, message: "Erro interno do servidor." });
-}
-}
+};
 
 const deleteUser = async (req, res) => {
   const { token } = req.body;
