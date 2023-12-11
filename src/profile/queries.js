@@ -149,6 +149,17 @@ async function selectUserId(email) {
   });
 }
 
+async function selectUserNickname(nickname) {
+  return prisma.perfil.findFirst({
+    where: {
+      nickname: nickname,
+    },
+    select: {
+      user_id: true,
+    },
+  });
+}
+
 async function selectProfile(user_id) {
   return prisma.perfil.findFirst({
     where: {
@@ -163,6 +174,22 @@ async function selectProfileFull(user_id) {
       user_id: user_id,
     },
   })
+  if (perfilData) {
+    //perfilData.seguindo = perfilData.seguindo.seguindo.length;
+    //perfilData.seguidores = perfilData.seguidores.seguidores.length;
+    return perfilData;
+  }
+  return null;
+}
+
+async function selectProfileFullNickname(nickname) {
+  console.log(nickname)
+  let perfilData = await prisma.perfil.findFirst({
+    where: {
+      nickname: nickname,
+    },
+  })
+  console.log(perfilData)
   if (perfilData) {
     //perfilData.seguindo = perfilData.seguindo.seguindo.length;
     //perfilData.seguidores = perfilData.seguidores.seguidores.length;
@@ -278,9 +305,11 @@ async function exibirMeusPensamentos(user_id) {
 
 module.exports = {
   prisma,
+  selectUserNickname,
   selectUser,
   checkEmailExists,
   checkNicknameExists,
+  selectProfileFullNickname,
   findLastUserId,
   insertUserProfile,
   selectUserId,

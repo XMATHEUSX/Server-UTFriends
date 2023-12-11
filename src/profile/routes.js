@@ -5,6 +5,7 @@ const controller = require("./controller");
 router.post("/login", controller.login);
 router.post("/register", controller.register);
 router.post("/user", controller.userInfo);
+router.post("/usersearch", controller.userSearch);
 router.post("/verify", controller.verify);
 router.post("/verifypassword", controller.verifyPassword);
 router.post("/update", controller.update);

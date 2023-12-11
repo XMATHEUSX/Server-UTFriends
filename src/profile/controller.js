@@ -150,6 +150,30 @@ const userInfo = async (req, res) => {
   await queries.prisma.$disconnect();
 };
 
+const userSearch = async (req, res) => {
+  const { nickname } = req.body;
+  console.log(nickname)
+  await queries.prisma.$connect();
+  if (nickname) {
+    try {
+      //Todo verificar o porque esta fazendo diversas requests
+      id = await queries.selectUserNickname(nickname);
+      console.log(id.user_id)
+      user = await queries.selectProfileFull(id.user_id);
+      console.log(user)
+      res.json({
+        success: true,
+        dados: user,
+      });
+    } catch (error) {
+      console.error("Erro na passagem do id:", error);
+    }
+  } else {
+    console.error("id não encontrado.");
+  }
+  await queries.prisma.$disconnect();
+};
+
 const infoConta = async (req, res) => {
   const { token } = req.body;
   var dadosRecebidos = jwt.verify(token, configs.segredo);
@@ -328,6 +352,7 @@ module.exports = {
   verify,
   deleteUser,
   update,
+  userSearch,
   updatePassword,
   forgetPassword,
   verifyPassword,
