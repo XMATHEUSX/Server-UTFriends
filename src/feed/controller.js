@@ -53,10 +53,32 @@ const curtirPensamento = async (req, res) => {
 };
 
 const searchProfile = async (req, res) => {
-  const { busca } = req.body;
+  const { busca, token } = req.body;
+  const userIdRecebido = jwt.verify(token, configs.segredo);
   const profiles = await queries.buscaNickname(busca);
+  for (let i = 0; i < profiles.length; i++) {
+    if (profiles[i].seguidores) {
+      const seguidoresJson = JSON.stringify(profiles[i].seguidores, null,2);
+      const seguidoresJsons = JSON.parse(seguidoresJson);
+      for (let j = 0; j < seguidoresJsons.seguidores.length; j++) {
+        if (seguidoresJsons.seguidores[j].user_id == userIdRecebido) {
+          profiles[i].follow = true;
+          break
+        }else{
+          profiles[i].follow = false;
+        }
+      }
+  }
+}
+console.log(profiles)
   res.status(200).json({ success: true, profiles: profiles });
 };
+
+const seguirUsuario = async(req,res) => {
+  const { token} = req.body;
+  const userIdRecebido = jwt.verify(token, configs.segredo);
+  queries.seguirUsuario(userIdRecebido,nickname)
+}
 
 const inserirPensamento = async (req, res) => {
   const { token, ds_pensamento } = req.body;
@@ -82,4 +104,5 @@ module.exports = {
   curtirPensamento,
   searchProfile,
   inserirPensamento,
+  seguirUsuario,
 };

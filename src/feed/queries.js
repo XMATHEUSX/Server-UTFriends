@@ -159,6 +159,13 @@ async function quantidadeCurtidas(pensamento_id) {
   }
 }
 
+async function seguirUsuario(user_id,nickname,des){
+  await prisma.$queryRaw`
+  UPDATE perfil
+  SET seguidores = seguidores || '{"seguidores": [{"user_id": ${user_id}, "nickname": "${nickname}"}]}'
+  WHERE user_id = ${des}`;
+}
+
 async function exibirMeusPensamentos(user_id) {
   return prisma.pensamentos.findMany({
     where: {
@@ -185,6 +192,7 @@ module.exports = {
   exibirCurtidas,
   quantidadeCurtidas,
   exibirMeusPensamentos,
+  seguirUsuario,
   meuFeed,
   inserirComentario,
 };

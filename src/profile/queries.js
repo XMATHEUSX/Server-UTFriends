@@ -19,6 +19,20 @@ async function selectUser(email, password) {
   return null;
 }
 
+async function verifyPassword(user_id,password) {
+  const user = await prisma.$queryRaw`
+    SELECT 
+      user_id
+    FROM 
+      conta
+    WHERE 
+      user_id = ${user_id} AND senha = crypt(${password}, senha) LIMIT 1`;
+
+  if (user[0]) {
+    return user[0];
+  }
+  return null;
+}
 async function infoConta(user_id) {
   return prisma.conta.findFirst({
     select: {
@@ -55,6 +69,19 @@ async function updatePassword(email, password) {
   return prisma.conta.update({
     where: {
       email: email,
+    },
+    data: {
+      senha: crypt_senha[0].crypt,
+    },
+  });
+}
+
+async function updatePasswordToken(user_id, password) {
+  const crypt_senha =
+    await prisma.$queryRaw`SELECT crypt(${password}, gen_salt('bf'))`;
+  return prisma.conta.update({
+    where: {
+      user_id: user_id,
     },
     data: {
       senha: crypt_senha[0].crypt,
@@ -135,9 +162,10 @@ async function selectProfileFull(user_id) {
     where: {
       user_id: user_id,
     },
-  });
-
+  })
   if (perfilData) {
+    //perfilData.seguindo = perfilData.seguindo.seguindo.length;
+    //perfilData.seguidores = perfilData.seguidores.seguidores.length;
     return perfilData;
   }
   return null;
@@ -256,6 +284,8 @@ module.exports = {
   selectProfile,
   selectProfileFull,
   updateEmailVerify,
+  verifyPassword,
+  updatePasswordToken,
   updateBio,
   updateNickname,
   updatePassword,

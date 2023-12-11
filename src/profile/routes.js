@@ -6,6 +6,7 @@ router.post("/login", controller.login);
 router.post("/register", controller.register);
 router.post("/user", controller.userInfo);
 router.post("/verify", controller.verify);
+router.post("/verifypassword", controller.verifyPassword);
 router.post("/update", controller.update);
 router.post("/delete", controller.deleteUser);
 router.post("/infoConta", controller.infoConta);
