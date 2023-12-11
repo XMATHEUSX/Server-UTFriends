@@ -270,6 +270,9 @@ async function exibirMeusPensamentos(user_id) {
     where: {
       user_id: user_id,
     },
+    orderBy: {
+      pensamento_id: "desc",
+    },
   });
 }
 
