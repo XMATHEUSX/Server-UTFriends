@@ -88,7 +88,7 @@ const register = async (req, res) => {
       parseInt(curso),
       nickname.toLowerCase()
     );
-    // console.log(user.user_id)
+     
     data = {
       time: Date.now,
       email: email,
@@ -272,6 +272,26 @@ const updatePassword = async (req, res) => {
   queries.prisma.$disconnect();
 };
 
+
+const followUser = async (req, res) => {
+  await queries.prisma.$connect();
+  const { nicknameFollower,nicknameFollowed, follow} = req.body;
+  try{
+  const idFollower = await queries.selectUserNickname(nicknameFollower);
+  const idFollowed = await queries.selectUserNickname(nicknameFollowed);
+  console.log(idFollower.user_id,nicknameFollower,idFollowed.user_id,nicknameFollowed,follow)
+  await queries.followUser(idFollower.user_id,nicknameFollower,idFollowed.user_id,nicknameFollowed,follow)
+  }
+  catch (error) {
+    console.error("Erro ao registrar no banco de dados:", error);
+
+    res
+      .status(500)
+      .json({ success: false, message: "Erro interno do servidor." });
+  }
+  await queries.prisma.$disconnect();
+}
+
 const forgetPassword = async (req, res) => {
   await queries.prisma.$connect();
   const { email } = req.body;
@@ -361,6 +381,7 @@ module.exports = {
   update,
   userSearch,
   updatePassword,
+  followUser,
   forgetPassword,
   verifyPassword,
   healthCheck,

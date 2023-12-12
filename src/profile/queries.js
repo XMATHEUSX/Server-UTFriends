@@ -296,6 +296,74 @@ async function updateCurso(user_id, curso_id) {
   });
 }
 
+async function followUser(idFollower, nicknameFollower, idFollowed, nicknameFollowed, follow) {
+  if (!follow) {
+var jsonFollower = {
+    user_id: idFollower,
+    nickname: nicknameFollower
+};
+
+var jsonFollowed = {
+  user_id: idFollowed,
+  nickname: nicknameFollowed
+};
+
+// Convertendo o objeto para uma string JSON
+var jsonFollower = JSON.stringify(jsonFollower);
+
+var jsonFollowed = JSON.stringify(jsonFollowed);
+    await prisma.$queryRaw
+    `UPDATE perfil
+    SET seguidores = jsonb_insert(
+                          COALESCE(seguidores, '{}'::jsonb),
+                          '{seguidores, -1}',
+                          ${jsonFollower}::jsonb,
+                          true
+                       )
+    WHERE user_id = ${idFollowed}`;
+
+    await prisma.$queryRaw`
+      UPDATE perfil
+      SET seguindo = jsonb_insert(
+                            COALESCE(seguindo, '{}'::jsonb),
+                            '{seguindo, -1}',
+                            ${jsonFollowed}::jsonb,
+                            true
+                         )
+      WHERE user_id = ${idFollower}`;
+  } else {
+    await prisma.$queryRaw`
+      UPDATE perfil
+      SET seguidores = jsonb_set(
+          seguidores,
+          '{seguidores}',
+          (
+              SELECT COALESCE(jsonb_agg(to_jsonb(seg::jsonb)), '[]'::jsonb)
+              FROM jsonb_array_elements(seguidores->'seguidores') seg
+              WHERE (seg->>'user_id')::int <> ${idFollower}
+          )
+      )
+      WHERE user_id = ${idFollowed}`;
+
+    await prisma.$queryRaw`
+      UPDATE perfil
+      SET seguindo = jsonb_set(
+          seguindo,
+          '{seguindo}',
+          (
+              SELECT COALESCE(jsonb_agg(to_jsonb(seg::jsonb)), '[]'::jsonb)
+              FROM jsonb_array_elements(seguindo->'seguindo') seg
+              WHERE (seg->>'user_id')::int <> ${idFollowed}
+          )
+      )
+      WHERE user_id = ${idFollower}`;
+  }
+}
+
+
+
+
+
 async function exibirMeusPensamentos(user_id) {
   return prisma.pensamentos.findMany({
     where: {
@@ -326,6 +394,7 @@ module.exports = {
   updateNickname,
   updatePassword,
   updateCurso,
+  followUser,
   deleteUser,
   infoConta,
   exibirMeusPensamentos,
