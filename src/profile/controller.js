@@ -37,7 +37,7 @@ const login = async (req, res) => {
         to: "matheusxavier@alunos.utfpr.edu.br",
         subject: "Congratulations",
         html:
-          "<p>email de verificação<strong>http://localhost:5173/EmailConfirmed?code=" +
+          "<p>email de verificação<strong>https://utfriends.netlify.app/EmailConfirmed?code=" +
           token +
           "</strong></p>",
       });
@@ -109,7 +109,7 @@ const register = async (req, res) => {
       to: "matheusxavier@alunos.utfpr.edu.br",
       subject: "Congratulations",
       html:
-        "<p>email de verificação<strong>http://localhost:5173/EmailConfirmed?code=" +
+        "<p>email de verificação<strong>https://utfriends.netlify.app/EmailConfirmed?code=" +
         token +
         "</strong></p>",
     });
@@ -311,7 +311,7 @@ const forgetPassword = async (req, res) => {
       to: "matheusxavier@alunos.utfpr.edu.br",
       subject: "Congratulations",
       html:
-        "<p> \n Troca de senha <br> <strong>http://localhost:5173/NewPassword?code=" +
+        "<p> \n Troca de senha <br> <strong>https://utfriends.netlify.app/NewPassword?code=" +
         token +
         "</strong></p>",
     });
